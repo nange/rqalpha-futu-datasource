@@ -1,0 +1,10 @@
+[project]
+name = "rqalpha-futu-datasource"
+version = "0.1.0"
+description = "Futu datasource for rqalpha"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["futu-api>=9.4.5408", "rqalpha>=5.6.4.1"]
+
+[dependency-groups]
+dev = ["ruff>=0.14.3"]

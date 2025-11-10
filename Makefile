@@ -42,4 +42,4 @@ format-check:
 fix: lint-fix format
 
 test:
-	$(PYRUN) python -m unittest discover -s $(TEST_DIR) -p "$(TEST_PATTERN)" -v
+	cd $(TEST_DIR) && $(PYRUN) python -m unittest discover -s . -p "$(TEST_PATTERN)" -v

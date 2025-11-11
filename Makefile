@@ -6,10 +6,11 @@ PYRUN ?= uv run
 TEST_DIR ?= test
 TEST_PATTERN ?= test_*.py
 
-.PHONY: help lint lint-fix format format-check fix test
+.PHONY: help lint lint-fix format format-check fix test sync
 
 help:
 	@echo "Available targets:"
+	@echo "  sync           - Sync dependencies using uv"
 	@echo "  lint           - Run ruff lint checks"
 	@echo "  lint-fix       - Run ruff and auto-fix issues where possible"
 	@echo "  format         - Format code using ruff formatter"
@@ -43,3 +44,6 @@ fix: lint-fix format
 
 test:
 	$(PYRUN) pytest $(TEST_DIR)/ -v
+
+sync:
+	uv sync

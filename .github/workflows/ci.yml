@@ -23,8 +23,8 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v2
 
-      - name: Sync dependencies (prod + dev)
-        run: uv sync --all-groups --frozen
+      - name: Sync dependencies
+        run: make sync
 
       - name: Lint
         run: make lint

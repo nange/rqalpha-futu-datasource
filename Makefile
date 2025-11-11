@@ -3,7 +3,7 @@ DEFAULT_GOAL := help
 
 # Use uv by default; override with `make PYRUN="python -m"`
 PYRUN ?= uv run
-TEST_DIR ?= test
+TEST_DIR ?= tests
 TEST_PATTERN ?= test_*.py
 
 .PHONY: help lint lint-fix format format-check fix test sync

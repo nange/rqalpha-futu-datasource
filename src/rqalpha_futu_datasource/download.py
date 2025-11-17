@@ -98,7 +98,7 @@ def main(argv: List[str] | None = None):
         codes_raw.extend([x for x in args.codes.split(",") if x])
     if args.code_file:
         with open(args.code_file, "r", encoding="utf-8") as f:
-            codes_raw.extend([l.strip() for l in f if l.strip()])
+            codes_raw.extend([line.strip() for line in f if line.strip()])
     codes = parse_codes(codes_raw)
     periods = [p.strip() for p in args.periods.split(",") if p.strip()]
     for p in periods:

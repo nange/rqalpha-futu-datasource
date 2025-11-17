@@ -5,7 +5,7 @@ This module contains utility functions used by the Futu DataSource implementatio
 including data conversion, validation, and helper functions.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 import datetime
 from .constants import ERROR_INVALID_SYMBOL
 
@@ -69,3 +69,34 @@ def handle_futu_error(error: Exception) -> str:
         return ERROR_INVALID_SYMBOL
     else:
         return "UNKNOWN_ERROR"
+
+
+def rq_to_futu_code(order_book_id: str) -> Tuple[str, str]:
+    if not order_book_id or not isinstance(order_book_id, str):
+        raise ValueError(ERROR_INVALID_SYMBOL)
+    parts = order_book_id.split(".")
+    if len(parts) != 2:
+        raise ValueError(ERROR_INVALID_SYMBOL)
+    code, exch = parts[0], parts[1].upper()
+    if exch == "XSHG":
+        return "SH", code
+    if exch == "XSHE":
+        return "SZ", code
+    if exch == "XHKG":
+        return "HK", code
+    if exch in ("XNAS", "XNYS"):
+        return "US", code
+    raise ValueError(ERROR_INVALID_SYMBOL)
+
+
+def dt_to_int(dt: datetime.datetime, daily: bool) -> int:
+    if daily:
+        return int(dt.strftime("%Y%m%d000000"))
+    return int(dt.strftime("%Y%m%d%H%M%S"))
+
+
+def futu_path(data_root: str, market: str, symbol: str, frequency: str) -> str:
+    freq = frequency.lower()
+    if freq not in ("1d", "1m"):
+        raise ValueError("unsupported frequency")
+    return f"{data_root}/{market}/{symbol}/{freq}.csv"

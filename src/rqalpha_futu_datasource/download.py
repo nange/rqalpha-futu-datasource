@@ -27,7 +27,13 @@ def parse_codes(raw: List[str]) -> List[Tuple[str, str]]:
         if not c:
             continue
         parts = c.split(".")
-        if len(parts) == 2 and parts[1].upper() in ("XSHG", "XSHE", "XHKG", "XNAS", "XNYS"):
+        if len(parts) == 2 and parts[1].upper() in (
+            "XSHG",
+            "XSHE",
+            "XHKG",
+            "XNAS",
+            "XNYS",
+        ):
             market, symbol = rq_to_futu_code(c)
             res.append((market, symbol))
         elif len(parts) == 2 and parts[0].upper() in ("SH", "SZ", "HK", "US"):
@@ -52,23 +58,50 @@ def save_csv(root: str, market: str, symbol: str, period: str, df: pd.DataFrame)
     out.to_csv(Path(root, market, symbol, file_name(period)), index=False)
 
 
-def fetch_history(ctx: ft.OpenQuoteContext, code: str, period: str, start: str | None, end: str | None) -> pd.DataFrame:
+def fetch_history(
+    ctx: ft.OpenQuoteContext, code: str, period: str, start: str | None, end: str | None
+) -> pd.DataFrame:
     ktype = PERIOD_MAP[period]
-    ret, data, page_req_key = ctx.request_history_kline(code, start=start, end=end, ktype=ktype, autype=ft.AuType.QFQ, fields=[ft.KL_FIELD.ALL], max_count=1000)
+    ret, data, page_req_key = ctx.request_history_kline(
+        code,
+        start=start,
+        end=end,
+        ktype=ktype,
+        autype=ft.AuType.QFQ,
+        fields=[ft.KL_FIELD.ALL],
+        max_count=1000,
+    )
     if ret != ft.RET_OK:
         raise RuntimeError(str(data))
     frames = [data]
     while page_req_key is not None:
-        ret, data, page_req_key = ctx.request_history_kline(code, start=start, end=end, ktype=ktype, autype=ft.AuType.QFQ, fields=[ft.KL_FIELD.ALL], max_count=1000, page_req_key=page_req_key)
+        ret, data, page_req_key = ctx.request_history_kline(
+            code,
+            start=start,
+            end=end,
+            ktype=ktype,
+            autype=ft.AuType.QFQ,
+            fields=[ft.KL_FIELD.ALL],
+            max_count=1000,
+            page_req_key=page_req_key,
+        )
         if ret != ft.RET_OK:
             raise RuntimeError(str(data))
         frames.append(data)
     if frames:
         return pd.concat(frames, ignore_index=True)
-    return pd.DataFrame(columns=["time_key", "open", "high", "low", "close", "volume", "turnover"])
+    return pd.DataFrame(
+        columns=["time_key", "open", "high", "low", "close", "volume", "turnover"]
+    )
 
 
-def download(root: str, codes: List[Tuple[str, str]], periods: List[str], start: str | None, end: str | None):
+def download(
+    root: str,
+    codes: List[Tuple[str, str]],
+    periods: List[str],
+    start: str | None,
+    end: str | None,
+):
     ctx = ft.OpenQuoteContext(host=FUTU_HOST, port=FUTU_PORT)
     try:
         for market, symbol in codes:
@@ -82,7 +115,11 @@ def download(root: str, codes: List[Tuple[str, str]], periods: List[str], start:
 
 def parse_args(argv: List[str] | None = None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-dir", type=str, default=os.getenv("FUTU_DATA_DIR", os.path.join(os.getcwd(), "data")))
+    parser.add_argument(
+        "--data-dir",
+        type=str,
+        default=os.getenv("FUTU_DATA_DIR", os.path.join(os.getcwd(), "data")),
+    )
     parser.add_argument("--codes", type=str, default="")
     parser.add_argument("--code-file", type=str, default="")
     parser.add_argument("--periods", type=str, default="1m,3m,5m,1d,1w,1mo")

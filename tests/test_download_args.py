@@ -2,7 +2,16 @@ from rqalpha_futu_datasource.download import parse_codes, PERIOD_MAP, parse_args
 
 
 def test_parse_codes_both_formats():
-    codes = parse_codes(["000001.XSHE", "SZ.000002", "600000.XSHG", "SH.600001", "US.AAPL", "00700.XHKG"])
+    codes = parse_codes(
+        [
+            "000001.XSHE",
+            "SZ.000002",
+            "600000.XSHG",
+            "SH.600001",
+            "US.AAPL",
+            "00700.XHKG",
+        ]
+    )
     assert ("SZ", "000001") in codes
     assert ("SZ", "000002") in codes
     assert ("SH", "600000") in codes

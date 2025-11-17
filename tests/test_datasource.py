@@ -13,7 +13,9 @@ def test_history_bars_daily():
     ds = FutuDataSource(data_dir="tests/data")
     ins = DummyInstrument("000001.XSHE")
     dt = datetime.datetime(2024, 11, 6)
-    arr = ds.history_bars(ins, 2, "1d", ["datetime", "open", "close"], dt, skip_suspended=True)
+    arr = ds.history_bars(
+        ins, 2, "1d", ["datetime", "open", "close"], dt, skip_suspended=True
+    )
     assert arr is not None
     assert len(arr) == 2
     assert arr.dtype.names == ("datetime", "open", "close")
@@ -31,7 +33,9 @@ def test_get_bar_daily():
 
 def test_is_suspended():
     ds = FutuDataSource(data_dir="tests/data")
-    res = ds.is_suspended("000001.XSHE", [pandas.Timestamp("2024-11-04"), pandas.Timestamp("2024-11-05")])
+    res = ds.is_suspended(
+        "000001.XSHE", [pandas.Timestamp("2024-11-04"), pandas.Timestamp("2024-11-05")]
+    )
     assert res == [True, False]
 
 

@@ -12,10 +12,8 @@ from rqalpha.interface import AbstractDataSource, Instrument, TRADING_CALENDAR_T
 from rqalpha.model import BarObject, TickObject
 
 
-
 import pandas
 import numpy
-
 
 
 class FutuDataSource(AbstractDataSource):
@@ -26,12 +24,15 @@ class FutuDataSource(AbstractDataSource):
     def __init__(self, data_dir: str | None = None):
         import os
         from .utils import rq_to_futu_code, futu_path, dt_to_int
-        self._data_dir = data_dir or os.getenv("FUTU_DATA_DIR") or os.path.join(os.getcwd(), "data")
+
+        self._data_dir = (
+            data_dir or os.getenv("FUTU_DATA_DIR") or os.path.join(os.getcwd(), "data")
+        )
         self._rq_to_futu_code = rq_to_futu_code
         self._futu_path = futu_path
         self._dt_to_int = dt_to_int
         self._cache: Dict[Tuple[str, str], pandas.DataFrame] = {}
-    
+
     def _load_df(self, order_book_id: str, frequency: str) -> pandas.DataFrame | None:
         market, symbol = self._rq_to_futu_code(order_book_id)
         path = self._futu_path(self._data_dir, market, symbol, frequency)
@@ -43,15 +44,17 @@ class FutuDataSource(AbstractDataSource):
             return None
         df = df.rename(columns={"turnover": "total_turnover"})
         df["datetime"] = pandas.to_datetime(df["time_key"])
-        df = df[["datetime", "open", "high", "low", "close", "volume", "total_turnover"]].copy()
+        df = df[
+            ["datetime", "open", "high", "low", "close", "volume", "total_turnover"]
+        ].copy()
         df.sort_values("datetime", inplace=True)
         df.reset_index(drop=True, inplace=True)
         return df
-    
+
     def get_instruments(
-        self, 
-        id_or_syms: Iterable[str] | None = None, 
-        types: Iterable[str] | None = None
+        self,
+        id_or_syms: Iterable[str] | None = None,
+        types: Iterable[str] | None = None,
     ) -> Iterable[Instrument]:
         """
         获取 instrument，
@@ -60,7 +63,9 @@ class FutuDataSource(AbstractDataSource):
         """
         raise NotImplementedError
 
-    def get_trading_calendars(self) -> Dict[TRADING_CALENDAR_TYPE, pandas.DatetimeIndex]:
+    def get_trading_calendars(
+        self,
+    ) -> Dict[TRADING_CALENDAR_TYPE, pandas.DatetimeIndex]:
         """
         获取交易日历，DataSource 应返回所有支持的交易日历种类
         注意：回测不用实现
@@ -68,9 +73,10 @@ class FutuDataSource(AbstractDataSource):
         raise NotImplementedError
 
     def get_yield_curve(
-        self, start_date: pandas.Timestamp, 
-        end_date: pandas.Timestamp, 
-        tenor: str = None
+        self,
+        start_date: pandas.Timestamp,
+        end_date: pandas.Timestamp,
+        tenor: str = None,
     ) -> pandas.DataFrame:
         """
         获取国债利率
@@ -94,10 +100,7 @@ class FutuDataSource(AbstractDataSource):
         raise NotImplementedError
 
     def get_bar(
-        self, 
-        instrument: Instrument, 
-        dt: datetime.datetime, 
-        frequency: str
+        self, instrument: Instrument, dt: datetime.datetime, frequency: str
     ) -> numpy.ndarray | dict:
         """
         根据 dt 来获取对应的 Bar 数据
@@ -141,7 +144,9 @@ class FutuDataSource(AbstractDataSource):
         }
         return values
 
-    def get_open_auction_bar(self, instrument: Instrument, dt: datetime.datetime) -> BarObject:
+    def get_open_auction_bar(
+        self, instrument: Instrument, dt: datetime.datetime
+    ) -> BarObject:
         """
         获取指定资产当日的集合竞价 Bar 数据，该 Bar 数据应包含的字段有：
             datetime, open, limit_up, limit_down, volume, total_turnover
@@ -149,7 +154,9 @@ class FutuDataSource(AbstractDataSource):
         """
         raise NotImplementedError
 
-    def get_open_auction_volume(self, instrument: Instrument, dt: datetime.datetime) -> float:
+    def get_open_auction_volume(
+        self, instrument: Instrument, dt: datetime.datetime
+    ) -> float:
         """
         获取指定资产当日的集合竞价成交量
         注意：回测不用实现
@@ -164,16 +171,16 @@ class FutuDataSource(AbstractDataSource):
         raise NotImplementedError
 
     def history_bars(
-        self, 
-        instrument: Instrument, 
-        bar_count: int, 
-        frequency: str, 
-        fields: str, 
-        dt: datetime.datetime, 
+        self,
+        instrument: Instrument,
+        bar_count: int,
+        frequency: str,
+        fields: str,
+        dt: datetime.datetime,
         skip_suspended: bool = True,
-        include_now: bool = False, 
-        adjust_type: str = 'pre', 
-        adjust_orig: Optional[datetime.datetime] = None
+        include_now: bool = False,
+        adjust_type: str = "pre",
+        adjust_orig: Optional[datetime.datetime] = None,
     ) -> numpy.ndarray | None:
         """
         获取历史数据
@@ -245,12 +252,26 @@ class FutuDataSource(AbstractDataSource):
                 fields_list = list(fields)
             except Exception:
                 return None
-        valid = {"datetime", "open", "high", "low", "close", "volume", "total_turnover", "open_interest", "basis_spread", "settlement", "prev_settlement"}
+        valid = {
+            "datetime",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+            "total_turnover",
+            "open_interest",
+            "basis_spread",
+            "settlement",
+            "prev_settlement",
+        }
         for f in fields_list:
             if f not in valid:
                 return None
         daily = frequency == "1d"
-        ts_col = data["datetime"].apply(lambda x: self._dt_to_int(x.to_pydatetime(), daily))
+        ts_col = data["datetime"].apply(
+            lambda x: self._dt_to_int(x.to_pydatetime(), daily)
+        )
         out = pandas.DataFrame(index=data.index)
         for f in fields_list:
             if f == "datetime":
@@ -259,14 +280,14 @@ class FutuDataSource(AbstractDataSource):
                 out[f] = data[f].astype(float)
             else:
                 out[f] = numpy.nan
-        dtype = [(f, numpy.float64) if f != "datetime" else ("datetime", numpy.uint64) for f in fields_list]
+        dtype = [
+            (f, numpy.float64) if f != "datetime" else ("datetime", numpy.uint64)
+            for f in fields_list
+        ]
         return numpy.array(list(map(tuple, out.values)), dtype=dtype)
 
     def history_ticks(
-        self, 
-        instrument: Instrument, 
-        count: int, 
-        dt: datetime.datetime
+        self, instrument: Instrument, count: int, dt: datetime.datetime
     ) -> List[TickObject]:
         """
         获取指定合约历史 tick 对象
@@ -275,11 +296,8 @@ class FutuDataSource(AbstractDataSource):
         raise NotImplementedError
 
     def current_snapshot(
-        self, 
-        instrument: Instrument, 
-        frequency: str, 
-        dt: datetime.datetime
-    ) :
+        self, instrument: Instrument, frequency: str, dt: datetime.datetime
+    ):
         """
         获得当前市场快照数据。只能在日内交易阶段调用，获取当日调用时点的市场快照数据。
         市场快照数据记录了每日从开盘到当前的数据信息，可以理解为一个动态的day bar数据。
@@ -314,7 +332,9 @@ class FutuDataSource(AbstractDataSource):
         """
         raise NotImplementedError
 
-    def available_data_range(self, frequency: str)-> Tuple[datetime.datetime, datetime.datetime]:
+    def available_data_range(
+        self, frequency: str
+    ) -> Tuple[datetime.datetime, datetime.datetime]:
         """
         此数据源能提供数据的时间范围
 
@@ -323,6 +343,7 @@ class FutuDataSource(AbstractDataSource):
         :return: (earliest, latest)
         """
         from pathlib import Path
+
         freq = frequency.lower()
         if freq not in ("1d", "1m"):
             raise ValueError("unsupported frequency")
@@ -336,7 +357,7 @@ class FutuDataSource(AbstractDataSource):
                 continue
             if "time_key" not in df.columns:
                 continue
-            ts = pandas.to_datetime(df["time_key"]) 
+            ts = pandas.to_datetime(df["time_key"])
             if len(ts) == 0:
                 continue
             e = ts.min().to_pydatetime()
@@ -348,7 +369,7 @@ class FutuDataSource(AbstractDataSource):
         if earliest is None or latest is None:
             raise ValueError("no data")
         return earliest, latest
-    
+
     def get_futures_trading_parameters(self, instrument, dt):
         """
         获取期货合约的时序手续费信息
@@ -356,7 +377,7 @@ class FutuDataSource(AbstractDataSource):
         :type instrument: :class:`~Instrument`
 
         :param datetime.datetime dt: 交易日
-        
+
         :return: :class:`FuturesTradingParameters`
 
         注意：回测不用实现

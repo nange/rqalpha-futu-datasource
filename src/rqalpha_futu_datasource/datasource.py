@@ -127,7 +127,7 @@ class FutuDataSource(AbstractDataSource):
             row = df[df["datetime"] == target]
         if row.empty:
             return None
-        fields = ["datetime", "open", "high", "low", "close", "volume", "total_turnover"]
+        # fields = ["datetime", "open", "high", "low", "close", "volume", "total_turnover"]
         daily = frequency == "1d"
         ts_int = self._dt_to_int(row.iloc[0]["datetime"].to_pydatetime(), daily)
         values = {
@@ -322,7 +322,6 @@ class FutuDataSource(AbstractDataSource):
 
         :return: (earliest, latest)
         """
-        import os
         from pathlib import Path
         freq = frequency.lower()
         if freq not in ("1d", "1m"):
@@ -341,11 +340,11 @@ class FutuDataSource(AbstractDataSource):
             if len(ts) == 0:
                 continue
             e = ts.min().to_pydatetime()
-            l = ts.max().to_pydatetime()
+            _latest = ts.max().to_pydatetime()
             if earliest is None or e < earliest:
                 earliest = e
-            if latest is None or l > latest:
-                latest = l
+            if latest is None or _latest > latest:
+                latest = _latest
         if earliest is None or latest is None:
             raise ValueError("no data")
         return earliest, latest

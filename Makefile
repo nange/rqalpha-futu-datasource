@@ -43,7 +43,7 @@ format-check:
 fix: lint-fix format
 
 test:
-	$(PYRUN) pytest $(TEST_DIR)/ -v
+	$(PYRUN) pytest $(TEST_DIR)/ -v -s -o log_cli=true -o log_cli_level=INFO
 
 sync:
 	uv sync

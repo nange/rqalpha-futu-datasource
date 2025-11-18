@@ -34,6 +34,6 @@ def test_parse_args_defaults():
 
 
 def test_parse_args_override_host_port():
-    args = parse_args(["--host", "10.0.0.2", "--port", "22222"])    
+    args = parse_args(["--host", "10.0.0.2", "--port", "22222"])
     assert args.host == "10.0.0.2"
     assert args.port == 22222

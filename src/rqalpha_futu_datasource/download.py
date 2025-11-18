@@ -128,7 +128,9 @@ def parse_args(argv: List[str] | None = None):
     parser.add_argument("--start", type=str, default=None)
     parser.add_argument("--end", type=str, default=None)
     parser.add_argument("--host", type=str, default=os.getenv("FUTU_HOST", FUTU_HOST))
-    parser.add_argument("--port", type=int, default=int(os.getenv("FUTU_PORT", str(FUTU_PORT))))
+    parser.add_argument(
+        "--port", type=int, default=int(os.getenv("FUTU_PORT", str(FUTU_PORT)))
+    )
     return parser.parse_args(argv)
 
 

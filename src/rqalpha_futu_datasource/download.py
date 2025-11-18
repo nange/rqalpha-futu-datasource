@@ -101,8 +101,10 @@ def download(
     periods: List[str],
     start: str | None,
     end: str | None,
+    host: str,
+    port: int,
 ):
-    ctx = ft.OpenQuoteContext(host=FUTU_HOST, port=FUTU_PORT)
+    ctx = ft.OpenQuoteContext(host=host, port=port)
     try:
         for market, symbol in codes:
             futu_code = f"{market}.{symbol}"
@@ -125,6 +127,8 @@ def parse_args(argv: List[str] | None = None):
     parser.add_argument("--periods", type=str, default="1m,3m,5m,1d,1w,1mo")
     parser.add_argument("--start", type=str, default=None)
     parser.add_argument("--end", type=str, default=None)
+    parser.add_argument("--host", type=str, default=os.getenv("FUTU_HOST", FUTU_HOST))
+    parser.add_argument("--port", type=int, default=int(os.getenv("FUTU_PORT", str(FUTU_PORT))))
     return parser.parse_args(argv)
 
 
@@ -141,7 +145,7 @@ def main(argv: List[str] | None = None):
     for p in periods:
         if p not in PERIOD_MAP:
             raise ValueError("unsupported period")
-    download(args.data_dir, codes, periods, args.start, args.end)
+    download(args.data_dir, codes, periods, args.start, args.end, args.host, args.port)
 
 
 if __name__ == "__main__":

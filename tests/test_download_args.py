@@ -1,4 +1,5 @@
 from rqalpha_futu_datasource.download import parse_codes, PERIOD_MAP, parse_args
+from rqalpha_futu_datasource.constants import FUTU_HOST, FUTU_PORT
 
 
 def test_parse_codes_both_formats():
@@ -28,3 +29,11 @@ def test_period_map_contains_defaults():
 def test_parse_args_defaults():
     args = parse_args([])
     assert "1m" in args.periods
+    assert args.host == FUTU_HOST
+    assert args.port == FUTU_PORT
+
+
+def test_parse_args_override_host_port():
+    args = parse_args(["--host", "10.0.0.2", "--port", "22222"])    
+    assert args.host == "10.0.0.2"
+    assert args.port == 22222

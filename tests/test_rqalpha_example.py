@@ -11,7 +11,9 @@ def init(context):
 
 def handle_bar(context, bar_dict):
     now = context.now
-    print(f"handle_bar at {now} codes={context.codes}, bar_dict={bar_dict['000001.XSHE']}, volume={bar_dict['000001.XSHE'].volume}, turnover={bar_dict['000001.XSHE'].total_turnover}, symbol={bar_dict['000001.XSHE'].symbol}")
+    print(
+        f"handle_bar at {now} codes={context.codes}, bar_dict={bar_dict['000001.XSHE']}, volume={bar_dict['000001.XSHE'].volume}, turnover={bar_dict['000001.XSHE'].total_turnover}, symbol={bar_dict['000001.XSHE'].symbol}"
+    )
 
 
 def test_run_with_futu_datasource():

@@ -63,6 +63,7 @@ class FutuDataSource(AbstractDataSource):
         """
         from rqalpha.const import INSTRUMENT_TYPE
         import os
+
         instruments: list[Instrument] = []
         if id_or_syms:
             for s in id_or_syms:
@@ -96,6 +97,7 @@ class FutuDataSource(AbstractDataSource):
 
     def _collect_trading_days(self) -> pandas.DatetimeIndex:
         from pathlib import Path
+
         days = []
         root = Path(self._data_dir)
         for p in root.rglob("1d.csv"):

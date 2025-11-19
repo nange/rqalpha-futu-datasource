@@ -61,16 +61,68 @@ class FutuDataSource(AbstractDataSource):
         可指定 order_book_id 或 symbol 或 instrument type，id_or_syms 优先级高于 types，
         id_or_syms 和 types 均为 None 时返回全部 instruments
         """
-        raise NotImplementedError
+        from rqalpha.const import INSTRUMENT_TYPE
+        import os
+        instruments: list[Instrument] = []
+        if id_or_syms:
+            for s in id_or_syms:
+                try:
+                    code, exch = s.split(".")
+                except Exception:
+                    code, exch = s, ""
+                exch = exch.upper()
+                if exch not in ("XSHE", "XSHG", "XHKG", "XNAS", "XNYS"):
+                    # 默认按 A 股处理
+                    exch = "XSHE"
+                market, symbol = self._rq_to_futu_code(f"{code}.{exch}")
+                # 若对应数据文件不存在，则跳过
+                daily_path = self._futu_path(self._data_dir, market, symbol, "1d")
+                minute_path = self._futu_path(self._data_dir, market, symbol, "1m")
+                if not (os.path.exists(daily_path) or os.path.exists(minute_path)):
+                    continue
+                dic = {
+                    "order_book_id": f"{code}.{exch}",
+                    "symbol": code,
+                    "round_lot": 100,
+                    "exchange": exch,
+                    "type": INSTRUMENT_TYPE.CS.name,
+                    "listed_date": "1990-01-01",
+                    "de_listed_date": "2999-12-31",
+                }
+                instruments.append(Instrument(dic))
+            return instruments
+        # 简化实现：当未指定 id_or_syms 时返回空列表
+        return instruments
+
+    def _collect_trading_days(self) -> pandas.DatetimeIndex:
+        from pathlib import Path
+        days = []
+        root = Path(self._data_dir)
+        for p in root.rglob("1d.csv"):
+            try:
+                df = pandas.read_csv(p)
+            except Exception:
+                continue
+            if "time_key" not in df.columns:
+                continue
+            ts = pandas.to_datetime(df["time_key"]).dt.normalize()
+            if "volume" in df.columns:
+                mask = df["volume"].astype(float) > 0.0
+                ts = ts[mask]
+            days.extend(ts.tolist())
+        if not days:
+            return pandas.DatetimeIndex([])
+        idx = pandas.DatetimeIndex(sorted(set(days)))
+        return idx
 
     def get_trading_calendars(
         self,
     ) -> Dict[TRADING_CALENDAR_TYPE, pandas.DatetimeIndex]:
-        """
-        获取交易日历，DataSource 应返回所有支持的交易日历种类
-        注意：回测不用实现
-        """
-        raise NotImplementedError
+        cal = self._collect_trading_days()
+        return {TRADING_CALENDAR_TYPE.EXCHANGE: cal}
+
+    def get_trading_calendar(self) -> pandas.DatetimeIndex:
+        return self._collect_trading_days()
 
     def get_yield_curve(
         self,
@@ -78,12 +130,7 @@ class FutuDataSource(AbstractDataSource):
         end_date: pandas.Timestamp,
         tenor: str = None,
     ) -> pandas.DataFrame:
-        """
-        获取国债利率
-        注意：回测不用实现
-        :return: pandas.DataFrame, [start_date, end_date]
-        """
-        raise NotImplementedError
+        return pandas.DataFrame()
 
     def get_dividend(self, instrument: Instrument) -> numpy.ndarray:
         """
@@ -368,7 +415,7 @@ class FutuDataSource(AbstractDataSource):
                 latest = _latest
         if earliest is None or latest is None:
             raise ValueError("no data")
-        return earliest, latest
+        return earliest.date(), latest.date()
 
     def get_futures_trading_parameters(self, instrument, dt):
         """

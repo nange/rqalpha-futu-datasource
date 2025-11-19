@@ -42,5 +42,5 @@ def test_is_suspended():
 def test_available_data_range():
     ds = FutuDataSource(data_dir="tests/data")
     e, latest = ds.available_data_range("1d")
-    assert e.date() == datetime.date(2024, 11, 1)
-    assert latest.date() == datetime.date(2024, 11, 5)
+    assert e == datetime.date(2024, 11, 1)
+    assert latest == datetime.date(2024, 11, 5)

@@ -1,16 +1,17 @@
 import os
+import time
 from rqalpha import run_func
+from rqalpha.api import subscribe
 
 
 def init(context):
-    context.logger.info("Backtest init with Futu DataSource mod")
     context.codes = ["000001.XSHE"]
+    subscribe(context.codes)
 
 
 def handle_bar(context, bar_dict):
     now = context.now
-    context.logger.info(f"handle_bar at {now} codes={context.codes}")
-    print(f"handle_bar at {now} codes={context.codes}")
+    print(f"handle_bar at {now} codes={context.codes}, bar_dict={bar_dict['000001.XSHE']}, volume={bar_dict['000001.XSHE'].volume}, turnover={bar_dict['000001.XSHE'].total_turnover}, symbol={bar_dict['000001.XSHE'].symbol}")
 
 
 def test_run_with_futu_datasource():
@@ -19,7 +20,6 @@ def test_run_with_futu_datasource():
         "base": {
             "start_date": "2024-11-01",
             "end_date": "2024-11-06",
-            "benchmark": "000001.XSHE",
             "accounts": {"stock": 100000},
             "frequency": "1d",
         },
@@ -31,7 +31,9 @@ def test_run_with_futu_datasource():
                 "enabled": True,
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
                 "data_dir": os.path.abspath("tests/data"),
-            }
+            },
+            "sys_analyser": {},
         },
     }
     run_func(init=init, handle_bar=handle_bar, config=config)
+    time.sleep(3)

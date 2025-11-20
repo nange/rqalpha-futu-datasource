@@ -16,13 +16,16 @@ help:
 	@echo "  format         - Format code using ruff formatter"
 	@echo "  format-check   - Check formatting without changing files"
 	@echo "  fix            - Apply lint fixes and then format"
-	@echo "  test           - Run unit tests in '$(TEST_DIR)'"
+	@echo "  test           - Run unit tests in '$(TEST_DIR)' (supports FILE/TEST/FUNC)"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make lint"
 	@echo "  make format"
 	@echo "  make fix"
 	@echo "  make test"
+	@echo "  make test FILE=test_example.py"
+	@echo "  make test TEST=test_example.py::TestClass::test_func"
+	@echo "  make test FUNC=test_specific_function"
 	@echo ""
 	@echo "Notes:"
 	@echo "  - Uses '$(PYRUN)' to run tools (defaults to 'uv run')."
@@ -43,7 +46,7 @@ format-check:
 fix: lint-fix format
 
 test:
-	$(PYRUN) pytest $(TEST_DIR)/ -v -s -o log_cli=true -o log_cli_level=INFO -W ignore::DeprecationWarning
+	$(PYRUN) pytest $(if $(TEST),$(TEST_DIR)/$(TEST),$(if $(FILE),$(TEST_DIR)/$(FILE),$(TEST_DIR)/)) $(if $(FUNC),-k "$(FUNC)",) -v -s -o log_cli=true -o log_cli_level=INFO -W ignore::DeprecationWarning
 
 sync:
 	uv sync

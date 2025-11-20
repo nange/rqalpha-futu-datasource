@@ -1,5 +1,4 @@
 import os
-import time
 from rqalpha import run_func
 from rqalpha.api import subscribe
 
@@ -38,4 +37,3 @@ def test_run_with_futu_datasource():
         },
     }
     run_func(init=init, handle_bar=handle_bar, config=config)
-    time.sleep(3)

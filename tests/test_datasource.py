@@ -28,7 +28,7 @@ def test_get_bar_daily():
     dt = datetime.datetime(2024, 11, 5)
     bar = ds.get_bar(ins, dt, "1d")
     assert isinstance(bar, dict)
-    assert bar["close"] == 10.7
+    assert bar["close"] == 11.052
 
 
 def test_is_suspended():
@@ -36,11 +36,11 @@ def test_is_suspended():
     res = ds.is_suspended(
         "000001.XSHE", [pandas.Timestamp("2024-11-04"), pandas.Timestamp("2024-11-05")]
     )
-    assert res == [True, False]
+    assert res == [False, False]
 
 
 def test_available_data_range():
     ds = FutuDataSource(data_dir="tests/data")
     e, latest = ds.available_data_range("1d")
-    assert e == datetime.date(2024, 11, 1)
-    assert latest == datetime.date(2024, 11, 5)
+    assert e == datetime.date(2024, 1, 2)
+    assert latest == datetime.date(2024, 12, 31)

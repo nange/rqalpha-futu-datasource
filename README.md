@@ -28,26 +28,37 @@
 
 ### 在 RQAlpha 中启用 Futu 数据源
 
-通过扩展模块替换默认 DataSource：
+通过扩展模块替换默认DataSource。参考：[test_rqalpha_example.py](tests/test_rqalpha_example.py)
 
-1. 新建扩展文件 `rqalpha_futu_ext.py`：
+关键代码：
 
-   ```python
-   import os
-   from rqalpha_futu_datasource import FutuDataSource
+```python
+def test_run_with_futu_datasource():
+    config = {
+        "base": {
+            "start_date": "2024-11-01",
+            "end_date": "2024-11-06",
+            "accounts": {"stock": 100000},
+            "frequency": "1m",
+            "data_bundle_path": os.path.abspath("tests/data"),
+        },
+        "extra": {
+            "log_level": "info",
+        },
+        "mod": {
+            "futu_ds": {
+                "enabled": True,
+                "lib": "rqalpha_futu_datasource.mod_futu_ds",
+            },
+            "sys_analyser": {},
+        },
+    }
+    run_func(init=init, handle_bar=handle_bar, config=config)
+```
 
-   def load_ext(context):
-       data_dir = os.getenv("FUTU_DATA_DIR", os.path.join(os.getcwd(), "data"))
-       ds = FutuDataSource(data_dir=data_dir)
-       context.env.set_data_source(ds)
-   ```
+### 说明
 
-2. 运行回测（示例）：
-   - `rqalpha run -f strategy.py -s 2024-11-01 -e 2024-11-30 --account stock 100000 --extend rqalpha_futu_ext.py`
-
-说明：
-
-- 已实现股票回测相关方法，包括 `history_bars`、`get_bar`、`available_data_range`、`is_suspended`。
+- 已实现关键股票回测相关方法，包括 `get_instruments`, `history_bars`、`get_bar`、`get_trading_calendar`, `available_data_range`、`is_suspended`。
 - 当前支持周期 `1d`、`1m` 的读取；更长周期可直接下载相应 CSV 或基于 `1m` 重采样后使用。
 - RQAlpha与富途股票代码之间的对应关系是：
   - A股：`000001.XSHE` -> `SZ.000001` (深圳交易所)
@@ -55,3 +66,7 @@
   - 港股：`00700.XHKG` -> `HK.00700`  (香港交易所)
   - 美股：`AAPL.XNAS` -> `US.AAPL`  (纳斯达克交易所)
   - 美股：`TSM.XNYS` -> `US.TSM`  (纽约交易所)
+- 限制：
+  - 仅支持股票数据，不支持期货、期权等。
+  - 原始从富途下载的数据就只能是股票前复权数据。不支持其他复权方式。
+  - 数据不能增量更新，有新数据需求只能重新下载全量数据。

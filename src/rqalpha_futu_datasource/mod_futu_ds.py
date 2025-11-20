@@ -16,10 +16,10 @@ def load_mod():
 
 class FutuDSMod(AbstractMod):
     def start_up(self, env, mod_config):
-        data_dir: Optional[str] = getattr(mod_config, "data_dir", None)
+        data_dir: Optional[str] = getattr(mod_config, "futu_data_path", None)
         if data_dir is None:
             try:
-                data_dir = mod_config["data_dir"]
+                data_dir = mod_config["futu_data_path"]
             except Exception:
                 data_dir = None
         if not data_dir:
@@ -40,7 +40,7 @@ class FutuDSMod(AbstractMod):
                 if bundle:
                     data_dir = bundle
         if not data_dir:
-            data_dir = os.getenv("FUTU_DATA_DIR")
+            data_dir = os.getenv("FUTU_DATA_PATH")
         env.set_data_source(FutuDataSource(data_dir=data_dir))
 
     def tear_down(self, code, exception=None):

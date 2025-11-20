@@ -28,7 +28,7 @@
 
 ### 在 RQAlpha 中启用 Futu 数据源
 
-通过扩展模块替换默认DataSource。参考：[test_rqalpha_example.py](tests/test_rqalpha_example.py)
+通过扩展模块替换默认DataSource。参考：[test_rqalpha_example.py](tests/test_rqalpha_example.py), [mod_futu_ds.py](src/rqalpha_futu_datasource/mod_futu_ds.py)
 
 关键代码：
 
@@ -55,6 +55,41 @@ def test_run_with_futu_datasource():
     }
     run_func(init=init, handle_bar=handle_bar, config=config)
 ```
+
+### 指定富途数据存储目录有三种方式
+
+1. 在RQAlpha的模块配置中指定：
+
+   ```python
+   config = {
+      "mod": {
+            "futu_ds": {
+                "enabled": True,
+                "lib": "rqalpha_futu_datasource.mod_futu_ds",
+                "futu_data_dir": "path/to/futu/data",
+            },
+            "sys_analyser": {},
+        },
+   }
+   ```
+
+2. 在RQAlpha base配置中指定：
+
+   ```python
+   config = {
+       "base": {
+           "data_bundle_path": "path/to/futu/data",
+       },
+   }
+   ```
+
+3. 在环境变量中指定：
+
+   ```bash
+   export FUTU_DATA_DIR=path/to/futu/data
+   ```
+
+优先级按此顺序：模块配置 > base配置 > 环境变量。
 
 ### 说明
 

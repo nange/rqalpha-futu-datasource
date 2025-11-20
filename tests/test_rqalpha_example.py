@@ -32,7 +32,7 @@ def test_run_with_futu_datasource():
             "end_date": "2024-11-06",
             "accounts": {"stock": 100000},
             "frequency": "1m",
-            "data_bundle_path": os.path.abspath("tests/data"),
+            # "data_bundle_path": os.path.abspath("tests/data"),
         },
         "extra": {
             "log_level": "info",
@@ -41,6 +41,7 @@ def test_run_with_futu_datasource():
             "futu_ds": {
                 "enabled": True,
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
+                "futu_data_path": os.path.abspath("tests/data"),
             },
             "sys_analyser": {},
         },

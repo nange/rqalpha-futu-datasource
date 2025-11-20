@@ -23,6 +23,21 @@ class FutuDSMod(AbstractMod):
             except Exception:
                 data_dir = None
         if not data_dir:
+            cfg = getattr(env, "config", None)
+            base = None
+            if cfg is not None:
+                try:
+                    base = getattr(cfg, "base", None) or cfg.get("base")
+                except Exception:
+                    base = None
+            if base is not None:
+                try:
+                    bundle = getattr(base, "data_bundle_path", None) or base.get("data_bundle_path")
+                except Exception:
+                    bundle = None
+                if bundle:
+                    data_dir = bundle
+        if not data_dir:
             data_dir = os.getenv("FUTU_DATA_DIR")
         env.set_data_source(FutuDataSource(data_dir=data_dir))
 

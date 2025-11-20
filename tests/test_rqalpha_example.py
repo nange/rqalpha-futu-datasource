@@ -10,7 +10,7 @@ def init(context):
 
 def handle_bar(context, bar_dict):
     now = context.now
-    
+
     print(
         f"handle_bar at {now} bar_dict={bar_dict['000001.XSHE']}, volume={bar_dict['000001.XSHE'].volume}, turnover={bar_dict['000001.XSHE'].total_turnover}, symbol={bar_dict['000001.XSHE'].symbol}"
     )
@@ -26,13 +26,13 @@ def handle_bar(context, bar_dict):
 
 
 def test_run_with_futu_datasource():
-    os.environ["FUTU_DATA_DIR"] = os.path.abspath("tests/data")
     config = {
         "base": {
             "start_date": "2024-11-01",
             "end_date": "2024-11-06",
             "accounts": {"stock": 100000},
             "frequency": "1m",
+            "data_bundle_path": os.path.abspath("tests/data"),
         },
         "extra": {
             "log_level": "info",
@@ -41,7 +41,6 @@ def test_run_with_futu_datasource():
             "futu_ds": {
                 "enabled": True,
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
-                "data_dir": os.path.abspath("tests/data"),
             },
             "sys_analyser": {},
         },

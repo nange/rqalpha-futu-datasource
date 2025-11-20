@@ -32,7 +32,9 @@ class FutuDSMod(AbstractMod):
                     base = None
             if base is not None:
                 try:
-                    bundle = getattr(base, "data_bundle_path", None) or base.get("data_bundle_path")
+                    bundle = getattr(base, "data_bundle_path", None) or base.get(
+                        "data_bundle_path"
+                    )
                 except Exception:
                     bundle = None
                 if bundle:

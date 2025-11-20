@@ -1,6 +1,6 @@
 import os
 from rqalpha import run_func
-from rqalpha.api import subscribe
+from rqalpha.api import subscribe, history_bars
 
 
 def init(context):
@@ -10,6 +10,13 @@ def init(context):
 
 def handle_bar(context, bar_dict):
     now = context.now
+    daily_2 = history_bars(
+        "000001.XSHE",
+        2,
+        "1d",
+        include_now=False,
+    )
+    print(f"last 2 daily bars for 000001.XSHE at {now}: {daily_2}")
 
     print(
         f"handle_bar at {now} bar_dict={bar_dict['000001.XSHE']}, volume={bar_dict['000001.XSHE'].volume}, turnover={bar_dict['000001.XSHE'].total_turnover}, symbol={bar_dict['000001.XSHE'].symbol}"
@@ -29,7 +36,7 @@ def test_run_with_futu_datasource():
     config = {
         "base": {
             "start_date": "2024-11-01",
-            "end_date": "2024-11-06",
+            "end_date": "2024-11-03",
             "accounts": {"stock": 100000},
             "frequency": "1m",
             # "data_bundle_path": os.path.abspath("tests/data"),

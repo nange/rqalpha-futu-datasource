@@ -16,9 +16,14 @@ MARKET_SH = "SH"  # Shanghai market
 MARKET_SZ = "SZ"  # Shenzhen market
 
 # Data frequency constants
-FREQUENCY_DAILY = "1d"
-FREQUENCY_HOURLY = "1h"
 FREQUENCY_MINUTE = "1m"
+FREQUENCY_3MINUTE = "3m"
+FREQUENCY_5MINUTE = "5m"
+FREQUENCY_15MINUTE = "15m"
+FREQUENCY_30MINUTE = "30m"
+FREQUENCY_HOURLY = "60M"
+FREQUENCY_DAILY = "1d"
+
 FREQUENCY_TICK = "tick"
 
 # Error codes

@@ -90,8 +90,6 @@ def rq_to_futu_code(order_book_id: str) -> Tuple[str, str]:
 
 
 def dt_to_int(dt: datetime.datetime, daily: bool) -> int:
-    if daily:
-        return int(dt.strftime("%Y%m%d000000"))
     return int(dt.strftime("%Y%m%d%H%M%S"))
 
 

@@ -281,18 +281,30 @@ class FutuDataSource(AbstractDataSource):
                 return None
             self._cache[key] = df
         if frequency == "1d":
-            cutoff = pandas.Timestamp(dt.date())
-            mask = df["datetime"].dt.date < cutoff.date()
+            cutoff_date = dt.date()
+            data = df
+            if skip_suspended:
+                data = data[data["volume"] > 0]
+            dates = pandas.Series(data["datetime"].dt.date)
+            uniq = sorted(set(dates.tolist()))
+            next_days = [d for d in uniq if d > cutoff_date]
             if include_now:
-                mask = df["datetime"].dt.date <= cutoff.date()
+                boundary = cutoff_date
+                mask = data["datetime"].dt.date <= boundary
+            else:
+                boundary = min(next_days) if next_days else cutoff_date
+                mask = data["datetime"].dt.date < boundary
         else:
             cutoff = pandas.Timestamp(dt)
             mask = df["datetime"] < cutoff
             if include_now:
                 mask = df["datetime"] <= cutoff
-        data = df.loc[mask]
-        if skip_suspended:
-            data = data[data["volume"] > 0]
+        if frequency == "1d":
+            data = data.loc[mask]
+        else:
+            data = df.loc[mask]
+            if skip_suspended:
+                data = data[data["volume"] > 0]
         data = data.tail(bar_count)
         if isinstance(fields, str):
             fields_list = [fields]

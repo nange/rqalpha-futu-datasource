@@ -38,7 +38,7 @@ def test_run_with_futu_datasource():
             "start_date": "2024-11-01",
             "end_date": "2024-11-03",
             "accounts": {"stock": 100000},
-            "frequency": "1m",
+            "frequency": "1d",
             # "data_bundle_path": os.path.abspath("tests/data"),
         },
         "extra": {

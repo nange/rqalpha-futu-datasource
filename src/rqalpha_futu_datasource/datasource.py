@@ -285,15 +285,28 @@ class FutuDataSource(AbstractDataSource):
             data = df
             if skip_suspended:
                 data = data[data["volume"] > 0]
-            dates = pandas.Series(data["datetime"].dt.date)
-            uniq = sorted(set(dates.tolist()))
+            uniq = sorted(set(data["datetime"].dt.date.tolist()))
+            if not uniq:
+                return None
             next_days = [d for d in uniq if d > cutoff_date]
+            next_day = min(next_days) if next_days else None
+            is_midnight = (
+                dt.time().hour == 0
+                and dt.time().minute == 0
+                and dt.time().second == 0
+                and dt.time().microsecond == 0
+            )
             if include_now:
-                boundary = cutoff_date
-                mask = data["datetime"].dt.date <= boundary
+                mask = data["datetime"].dt.date <= cutoff_date
             else:
-                boundary = min(next_days) if next_days else cutoff_date
-                mask = data["datetime"].dt.date < boundary
+                if is_midnight:
+                    mask = data["datetime"].dt.date < cutoff_date
+                else:
+                    mask = (
+                        data["datetime"].dt.date < next_day
+                        if next_day is not None
+                        else data["datetime"].dt.date <= cutoff_date
+                    )
         else:
             cutoff = pandas.Timestamp(dt)
             mask = df["datetime"] < cutoff

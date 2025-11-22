@@ -300,13 +300,12 @@ class FutuDataSource(AbstractDataSource):
                 mask = data["datetime"].dt.date <= cutoff_date
             else:
                 if is_midnight:
-                    mask = data["datetime"].dt.date < cutoff_date
+                    # 当dt是午夜时，包含 cutoff_date 这一天的数据
+                    # config.base.frequency="1d"时, dt的时间会是当前回测时间的前一天的00:00:00
+                    # 所以这里做特殊处理，包含 cutoff_date 这一天的数据
+                    mask = data["datetime"].dt.date <= cutoff_date
                 else:
-                    mask = (
-                        data["datetime"].dt.date < next_day
-                        if next_day is not None
-                        else data["datetime"].dt.date <= cutoff_date
-                    )
+                    mask = data["datetime"].dt.date < cutoff_date
         else:
             cutoff = pandas.Timestamp(dt)
             mask = df["datetime"] < cutoff

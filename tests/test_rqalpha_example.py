@@ -14,7 +14,7 @@ def handle_bar(context, bar_dict):
         "000001.XSHE",
         2,
         "1d",
-        include_now=False,
+        include_now=True,
     )
     print(f"last 2 daily bars for 000001.XSHE at {now}: {daily_2}")
 

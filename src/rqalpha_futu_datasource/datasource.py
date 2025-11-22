@@ -288,8 +288,6 @@ class FutuDataSource(AbstractDataSource):
             uniq = sorted(set(data["datetime"].dt.date.tolist()))
             if not uniq:
                 return None
-            next_days = [d for d in uniq if d > cutoff_date]
-            next_day = min(next_days) if next_days else None
             is_midnight = (
                 dt.time().hour == 0
                 and dt.time().minute == 0

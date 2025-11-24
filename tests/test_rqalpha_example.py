@@ -14,9 +14,14 @@ def handle_bar(context, bar_dict):
         "000001.XSHE",
         2,
         "1d",
-        include_now=True,
+        fields=["datetime", "close"],
+        include_now=False,
     )
     print(f"last 2 daily bars for 000001.XSHE at {now}: {daily_2}")
+    assert len(daily_2) == 2
+    last = daily_2[-1]
+    assert int(last["datetime"]) < int(now.strftime("%Y%m%d%H%M%S"))
+    assert float(last["close"]) > 0
 
     print(
         f"handle_bar at {now} bar_dict={bar_dict['000001.XSHE']}, volume={bar_dict['000001.XSHE'].volume}, turnover={bar_dict['000001.XSHE'].total_turnover}, symbol={bar_dict['000001.XSHE'].symbol}"

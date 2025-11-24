@@ -12,14 +12,32 @@ class DummyInstrument:
 def test_history_bars_daily():
     ds = FutuDataSource(data_dir="tests/data")
     ins = DummyInstrument("000001.XSHE")
-    dt = datetime.datetime(2024, 11, 6)
+    dt = datetime.datetime(2024, 11, 6, 15)
+    dt2 = datetime.datetime(2024, 11, 6)
     arr = ds.history_bars(
-        ins, 2, "1d", ["datetime", "open", "close"], dt, skip_suspended=True
+        ins,
+        2,
+        "1d",
+        include_now=False,
+        fields=["datetime", "open", "close"],
+        dt=dt,
+        skip_suspended=True,
+    )
+    arr2 = ds.history_bars(
+        ins,
+        2,
+        "1d",
+        include_now=False,
+        fields=["datetime", "open", "close"],
+        dt=dt2,
+        skip_suspended=True,
     )
     assert arr is not None
     assert len(arr) == 2
     assert arr.dtype.names == ("datetime", "open", "close")
     assert int(arr[-1]["datetime"]) == 20241105000000
+
+    assert int(arr2[-1]["datetime"]) == 20241106000000
 
 
 def test_get_bar_daily():

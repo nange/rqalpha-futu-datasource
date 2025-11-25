@@ -10,6 +10,8 @@ def init(context):
 
 def handle_bar(context, bar_dict):
     now = context.now
+    assert now.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 15:00:00"
+
     daily_2 = history_bars(
         "000001.XSHE",
         2,
@@ -17,31 +19,57 @@ def handle_bar(context, bar_dict):
         fields=["datetime", "close"],
         include_now=False,
     )
-    print(f"last 2 daily bars for 000001.XSHE at {now}: {daily_2}")
     assert len(daily_2) == 2
-    last = daily_2[-1]
-    assert int(last["datetime"]) < int(now.strftime("%Y%m%d%H%M%S"))
-    assert float(last["close"]) > 0
 
-    print(
-        f"handle_bar at {now} bar_dict={bar_dict['000001.XSHE']}, volume={bar_dict['000001.XSHE'].volume}, turnover={bar_dict['000001.XSHE'].total_turnover}, symbol={bar_dict['000001.XSHE'].symbol}"
+    last = daily_2[-1]
+    assert (
+        f"{str(last['datetime'])[0:4]}-{str(last['datetime'])[4:6]}-{str(last['datetime'])[6:8]} {str(last['datetime'])[8:10]}:{str(last['datetime'])[10:12]}:{str(last['datetime'])[12:14]}"
+        == "2024-10-31 00:00:00"
     )
-    print(
-        f"handle_bar at {now} bar_dict={bar_dict['600000.XSHG']}, volume={bar_dict['600000.XSHG'].volume}, turnover={bar_dict['600000.XSHG'].total_turnover}, symbol={bar_dict['600000.XSHG'].symbol}"
-    )
-    print(
-        f"handle_bar at {now} bar_dict={bar_dict['00700.XHKG']}, volume={bar_dict['00700.XHKG'].volume}, turnover={bar_dict['00700.XHKG'].total_turnover}, symbol={bar_dict['00700.XHKG'].symbol}"
-    )
-    print(
-        f"handle_bar at {now} bar_dict={bar_dict['AAPL.XNAS']}, volume={bar_dict['AAPL.XNAS'].volume}, turnover={bar_dict['AAPL.XNAS'].total_turnover}, symbol={bar_dict['AAPL.XNAS'].symbol}"
-    )
+    assert float(last["close"]) == 10.782
+
+    obj = bar_dict["000001.XSHE"]
+    assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 00:00:00"
+    assert float(obj.open) == 10.782
+    assert float(obj.high) == 10.952
+    assert float(obj.low) == 10.742
+    assert float(obj.close) == 10.832
+    assert float(obj.volume) == 158981111.0
+    assert float(obj.total_turnover) == 1821423447.06
+
+    obj = bar_dict["600000.XSHG"]
+    assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 00:00:00"
+    assert float(obj.open) == 9.45
+    assert float(obj.high) == 9.59
+    assert float(obj.low) == 9.36
+    assert float(obj.close) == 9.53
+    assert float(obj.volume) == 43939258.0
+    assert float(obj.total_turnover) == 435757873.0
+
+    obj = bar_dict["00700.XHKG"]
+    assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 00:00:00"
+    assert float(obj.open) == 401.5
+    assert float(obj.high) == 417.9
+    assert float(obj.low) == 401.5
+    assert float(obj.close) == 414.7
+    assert float(obj.volume) == 21086569.0
+    assert float(obj.total_turnover) == 8772957316.0
+
+    obj = bar_dict["AAPL.XNAS"]
+    assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 00:00:00"
+    assert float(obj.open) == 219.728380867
+    assert float(obj.high) == 224.088840443
+    assert float(obj.low) == 219.037270399
+    assert float(obj.close) == 221.662495776
+    assert float(obj.volume) == 65276741.0
+    assert float(obj.total_turnover) == 14544469827.0
 
 
 def test_run_with_futu_datasource():
     config = {
         "base": {
             "start_date": "2024-11-01",
-            "end_date": "2024-11-03",
+            "end_date": "2024-11-01",
             "accounts": {"stock": 100000},
             "frequency": "1d",
             # "data_bundle_path": os.path.abspath("tests/data"),

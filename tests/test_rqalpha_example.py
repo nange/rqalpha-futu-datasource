@@ -66,6 +66,22 @@ def handle_bar(context, bar_dict):
 
 
 def handle_bar_1m(context, bar_dict):
+    daily_2 = history_bars(
+        "000001.XSHE",
+        2,
+        "1d",
+        fields=["datetime", "close"],
+        include_now=False,
+    )
+    assert len(daily_2) == 2
+
+    last = daily_2[-1]
+    assert (
+        f"{str(last['datetime'])[0:4]}-{str(last['datetime'])[4:6]}-{str(last['datetime'])[6:8]} {str(last['datetime'])[8:10]}:{str(last['datetime'])[10:12]}:{str(last['datetime'])[12:14]}"
+        == "2024-10-31 00:00:00"
+    )
+    assert float(last["close"]) == 10.782
+
     now = context.now
     if now.strftime("%Y-%m-%d %H:%M:%S") != "2024-11-01 09:31:00":
         return

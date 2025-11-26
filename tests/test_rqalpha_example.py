@@ -20,10 +20,18 @@ def handle_bar(context, bar_dict):
         include_now=False,
     )
     assert len(daily_2) == 2
+    assert daily_2[-1]["datetime"] == 20241031000000
+    assert float(daily_2[-1]["close"]) == 10.782
 
-    last = daily_2[-1]
-    assert last['datetime'] == 20241031000000
-    assert float(last["close"]) == 10.782
+    weekly_2 = history_bars(
+        "000001.XSHE",
+        2,
+        "1w",
+        include_now=False,
+    )
+    assert len(weekly_2) == 2
+    assert weekly_2[-1]["datetime"] == 20241028000000
+    assert float(weekly_2[-1]["close"]) == 10.832
 
     obj = bar_dict["000001.XSHE"]
     assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 00:00:00"
@@ -73,7 +81,7 @@ def handle_bar_1m(context, bar_dict):
     assert len(daily_2) == 2
 
     last = daily_2[-1]
-    assert last['datetime'] == 20241031000000
+    assert last["datetime"] == 20241031000000
     assert float(last["close"]) == 10.782
 
     now = context.now
@@ -95,6 +103,70 @@ def handle_bar_1m(context, bar_dict):
     assert float(minute_2[1]["close"]) == 10.782
     assert float(minute_2[2]["close"]) == 10.782
     assert float(minute_2[3]["close"]) == 10.792
+
+    minute_3 = history_bars(
+        "000001.XSHE",
+        4,
+        "3m",
+        include_now=True,
+    )
+    assert len(minute_3) == 4
+    assert minute_3[0]["datetime"] == 20241031145100
+    assert minute_3[1]["datetime"] == 20241031145400
+    assert minute_3[2]["datetime"] == 20241031145700
+    assert minute_3[3]["datetime"] == 20241031150000
+    assert float(minute_3[0]["close"]) == 10.772
+    assert float(minute_3[1]["close"]) == 10.772
+    assert float(minute_3[2]["close"]) == 10.782
+    assert float(minute_3[3]["close"]) == 10.782
+
+    minute_5 = history_bars(
+        "000001.XSHE",
+        4,
+        "5m",
+        include_now=True,
+    )
+    assert len(minute_5) == 4
+    assert minute_5[0]["datetime"] == 20241031144500
+    assert minute_5[1]["datetime"] == 20241031145000
+    assert minute_5[2]["datetime"] == 20241031145500
+    assert minute_5[3]["datetime"] == 20241031150000
+    assert float(minute_5[0]["close"]) == 10.762
+    assert float(minute_5[1]["close"]) == 10.772
+    assert float(minute_5[2]["close"]) == 10.782
+    assert float(minute_5[3]["close"]) == 10.782
+
+    weekly_4 = history_bars(
+        "000001.XSHE",
+        4,
+        "1w",
+        include_now=True,
+    )
+    assert len(weekly_4) == 4
+    assert weekly_4[0]["datetime"] == 20241007000000
+    assert weekly_4[1]["datetime"] == 20241014000000
+    assert weekly_4[2]["datetime"] == 20241021000000
+    assert weekly_4[3]["datetime"] == 20241028000000
+    assert float(weekly_4[0]["close"]) == 11.122
+    assert float(weekly_4[1]["close"]) == 11.442
+    assert float(weekly_4[2]["close"]) == 11.112
+    assert float(weekly_4[3]["close"]) == 10.832
+
+    # monthly_4 = history_bars(
+    #     "000001.XSHE",
+    #     4,
+    #     "1mo",
+    #     include_now=True,
+    # )
+    # assert len(monthly_4) == 4
+    # assert monthly_4[0]["datetime"] == 20240801000000
+    # assert monthly_4[1]["datetime"] == 20240901000000
+    # assert monthly_4[2]["datetime"] == 20241001000000
+    # assert monthly_4[3]["datetime"] == 20241101000000
+    # assert float(monthly_4[0]["close"]) == 9.316
+    # assert float(monthly_4[1]["close"]) == 11.366
+    # assert float(monthly_4[2]["close"]) == 10.782
+    # assert float(monthly_4[3]["close"]) == 10.782
 
     obj = bar_dict["000001.XSHE"]
     assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 09:31:00"

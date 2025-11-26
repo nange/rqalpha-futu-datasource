@@ -9,6 +9,7 @@ from typing import Optional, List, Dict, Tuple, Iterable, Sequence
 import datetime
 
 from rqalpha.interface import AbstractDataSource, Instrument, TRADING_CALENDAR_TYPE
+from .constants import SUPPORTED_FREQUENCIES
 from rqalpha.model import BarObject, TickObject
 
 
@@ -162,7 +163,7 @@ class FutuDataSource(AbstractDataSource):
         :param str frequency: 周期频率，`1d` 表示日周期, `1m` 表示分钟周期
         :return: `numpy.ndarray` | `dict`
         """
-        if frequency not in ("1d", "1m"):
+        if frequency.lower() not in SUPPORTED_FREQUENCIES:
             raise ValueError("unsupported frequency")
         key = (instrument.order_book_id, frequency)
         df = self._cache.get(key)
@@ -267,7 +268,7 @@ class FutuDataSource(AbstractDataSource):
         :return: `Optional[numpy.ndarray]`, fields 不合法时返回 None
 
         """
-        if frequency not in ("1d", "1m"):
+        if frequency.lower() not in SUPPORTED_FREQUENCIES:
             raise ValueError("unsupported frequency")
         if adjust_type not in ("pre", "none", "post"):
             raise ValueError("invalid adjust_type")
@@ -416,7 +417,7 @@ class FutuDataSource(AbstractDataSource):
         from pathlib import Path
 
         freq = frequency.lower()
-        if freq not in ("1d", "1m"):
+        if freq not in SUPPORTED_FREQUENCIES:
             raise ValueError("unsupported frequency")
         earliest: datetime.datetime | None = None
         latest: datetime.datetime | None = None

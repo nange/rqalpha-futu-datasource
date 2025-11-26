@@ -7,6 +7,7 @@ including data conversion, validation, and helper functions.
 
 from typing import Any, Dict, Tuple
 import datetime
+from .constants import ERROR_INVALID_SYMBOL
 
 
 def validate_symbol(symbol: str) -> bool:
@@ -71,7 +72,10 @@ def dt_to_int(dt: datetime.datetime, daily: bool) -> int:
 
 
 def futu_path(data_root: str, market: str, symbol: str, frequency: str) -> str:
+    from .constants import SUPPORTED_FREQUENCIES
+
     freq = frequency.lower()
-    if freq not in ("1d", "1m"):
+    if freq not in SUPPORTED_FREQUENCIES:
         raise ValueError("unsupported frequency")
-    return f"{data_root}/{market}/{symbol}/{freq}.csv"
+    file_freq = "1mo" if freq == "1mon" else freq
+    return f"{data_root}/{market}/{symbol}/{file_freq}.csv"

@@ -10,7 +10,7 @@
 推荐使用`uv`工具管理项目依赖。执行以下命令安装项目依赖：
 
 ```bash
-uv sync
+make sync
 ```
 
 后续即可做开发和测试。
@@ -23,7 +23,7 @@ uv sync
 
 - 启动本地 OpenD(默认 `127.0.0.1:11111`)
 - 运行下载脚本，将数据保存为 CSV：
-  - `python -m rqalpha_futu_datasource.download --data-dir data --codes 000001.XSHE,600000.XSHG,00700.XHKG,US.AAPL --periods 1m,3m,5m,1d,1w,1mo --start 2024-01-01 --end 2024-12-31`
+  - `python -m rqalpha_futu_datasource.download --data-dir data --codes 000001.XSHE,600000.XSHG,00700.XHKG,US.AAPL --periods 1m,3m,5m,1d,1w --start 2024-01-01 --end 2024-12-31`
   - 或使用代码文件：`python -m rqalpha_futu_datasource.download --data-dir data --code-file ./codes.txt`
 - 目录结构：`data/<MARKET>/<SYMBOL>/<period>.csv`，例如：`data/SZ/000001/1d.csv`
 - 可通过环境变量指定目录：`set FUTU_DATA_DIR=...`（Windows）

@@ -5,14 +5,23 @@
 
 ## 用法
 
+### 本地开发
+
+推荐使用`uv`工具管理项目依赖。执行以下命令安装项目依赖：
+
+```bash
+uv sync
+```
+
+后续即可做开发和测试。
+
 ### 安装
 
-- `pip install rqalpha futu-api`
-- 在本项目根目录安装：`pip install -e .`
+- `pip install rqalpha-futu-datasource`
 
 ### 下载富途原始数据到本地
 
-- 启动本地 OpenD（默认 `127.0.0.1:11111`）
+- 启动本地 OpenD(默认 `127.0.0.1:11111`)
 - 运行下载脚本，将数据保存为 CSV：
   - `python -m rqalpha_futu_datasource.download --data-dir data --codes 000001.XSHE,600000.XSHG,00700.XHKG,US.AAPL --periods 1m,3m,5m,1d,1w,1mo --start 2024-01-01 --end 2024-12-31`
   - 或使用代码文件：`python -m rqalpha_futu_datasource.download --data-dir data --code-file ./codes.txt`
@@ -28,7 +37,7 @@
 
 ### 在 RQAlpha 中启用 Futu 数据源
 
-通过扩展模块替换默认DataSource。参考：[test_rqalpha_example.py](tests/test_rqalpha_example.py), [mod_futu_ds.py](src/rqalpha_futu_datasource/mod_futu_ds.py)
+通过扩展模块替换默认DataSource。参考：[test_rqalpha_example.py](tests/test_rqalpha.py), [mod_futu_ds.py](src/rqalpha_futu_datasource/mod_futu_ds.py)
 
 关键代码：
 
@@ -91,10 +100,9 @@ def test_run_with_futu_datasource():
 
 优先级按此顺序：模块配置 > base配置 > 环境变量。
 
-### 说明
+### 限制及说明
 
 - 已实现关键股票回测相关方法，包括 `get_instruments`, `history_bars`、`get_bar`、`get_trading_calendar`, `available_data_range`、`is_suspended`。
-- 当前支持周期 `1d`、`1m` 的读取；更长周期可直接下载相应 CSV 或基于 `1m` 重采样后使用。
 - RQAlpha与富途股票代码之间的对应关系是：
   - A股：`000001.XSHE` -> `SZ.000001` (深圳交易所)
   - A股：`603728.XSHG` -> `SH.603728` (上海交易所)
@@ -104,4 +112,5 @@ def test_run_with_futu_datasource():
 - 限制：
   - 仅支持股票数据，不支持期货、期权等。
   - 原始从富途下载的数据就只能是股票前复权数据。不支持其他复权方式。
-  - 数据不能增量更新，有新数据需求只能重新下载全量数据。
+  - 数据不能增量更新，有新数据需求只能重新下载全量数据(富途的OpenD进程会本地缓存数据，所以不用太担心此问题)。
+  - 回测频率支持周期 `1d`、`1m`(RQAlpha框架限制)，在handle_bar回调函数中，可以查询的历史数据周期为:`1m`, `3m`, `5m`, `1d`, `1w`(RQAlpha框架限制，无法支持到月级别)。

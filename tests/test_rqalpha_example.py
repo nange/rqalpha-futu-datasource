@@ -22,10 +22,7 @@ def handle_bar(context, bar_dict):
     assert len(daily_2) == 2
 
     last = daily_2[-1]
-    assert (
-        f"{str(last['datetime'])[0:4]}-{str(last['datetime'])[4:6]}-{str(last['datetime'])[6:8]} {str(last['datetime'])[8:10]}:{str(last['datetime'])[10:12]}:{str(last['datetime'])[12:14]}"
-        == "2024-10-31 00:00:00"
-    )
+    assert last['datetime'] == 20241031000000
     assert float(last["close"]) == 10.782
 
     obj = bar_dict["000001.XSHE"]
@@ -76,15 +73,28 @@ def handle_bar_1m(context, bar_dict):
     assert len(daily_2) == 2
 
     last = daily_2[-1]
-    assert (
-        f"{str(last['datetime'])[0:4]}-{str(last['datetime'])[4:6]}-{str(last['datetime'])[6:8]} {str(last['datetime'])[8:10]}:{str(last['datetime'])[10:12]}:{str(last['datetime'])[12:14]}"
-        == "2024-10-31 00:00:00"
-    )
+    assert last['datetime'] == 20241031000000
     assert float(last["close"]) == 10.782
 
     now = context.now
     if now.strftime("%Y-%m-%d %H:%M:%S") != "2024-11-01 09:31:00":
         return
+
+    minute_2 = history_bars(
+        "000001.XSHE",
+        4,
+        "1m",
+        include_now=True,
+    )
+    assert len(minute_2) == 4
+    assert minute_2[0]["datetime"] == 20241031145800
+    assert minute_2[1]["datetime"] == 20241031150000
+    assert minute_2[2]["datetime"] == 20241101093000
+    assert minute_2[3]["datetime"] == 20241101093100
+    assert float(minute_2[0]["close"]) == 10.782
+    assert float(minute_2[1]["close"]) == 10.782
+    assert float(minute_2[2]["close"]) == 10.782
+    assert float(minute_2[3]["close"]) == 10.792
 
     obj = bar_dict["000001.XSHE"]
     assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 09:31:00"

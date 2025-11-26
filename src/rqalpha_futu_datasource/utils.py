@@ -7,7 +7,6 @@ including data conversion, validation, and helper functions.
 
 from typing import Any, Dict, Tuple
 import datetime
-from .constants import ERROR_INVALID_SYMBOL
 
 
 def validate_symbol(symbol: str) -> bool:
@@ -47,28 +46,6 @@ def convert_futu_bar_to_rqalpha(bar_data: Dict[str, Any]) -> Dict[str, Any]:
         "volume": bar_data.get("volume", 0),
         "datetime": bar_data.get("datetime", datetime.datetime.now()),
     }
-
-
-def handle_futu_error(error: Exception) -> str:
-    """
-    Handle Futu API errors and convert to appropriate error codes.
-
-    Args:
-        error: Exception from Futu API
-
-    Returns:
-        str: Error code
-    """
-    error_msg = str(error).lower()
-
-    if "connection" in error_msg or "connect" in error_msg:
-        return "CONNECTION_FAILED"
-    elif "timeout" in error_msg:
-        return "API_TIMEOUT"
-    elif "invalid" in error_msg and "symbol" in error_msg:
-        return ERROR_INVALID_SYMBOL
-    else:
-        return "UNKNOWN_ERROR"
 
 
 def rq_to_futu_code(order_book_id: str) -> Tuple[str, str]:

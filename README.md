@@ -61,8 +61,7 @@ def test_run_with_futu_datasource():
             "futu_ds": {
                 "enabled": True,
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
-            },
-            "sys_analyser": {},
+            }
         },
     }
     run_func(init=init, handle_bar=handle_bar, config=config)
@@ -79,8 +78,7 @@ def test_run_with_futu_datasource():
                 "enabled": True,
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
                 "futu_data_dir": "path/to/futu/data",
-            },
-            "sys_analyser": {},
+            }
         },
    }
    ```

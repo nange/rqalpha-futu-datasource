@@ -22,6 +22,18 @@ class FutuDSMod(AbstractMod):
                 data_dir = mod_config["futu_data_path"]
             except Exception:
                 data_dir = None
+        hk_lot_map_path: Optional[str] = getattr(mod_config, "hk_lot_map_path", None)
+        if hk_lot_map_path is None:
+            try:
+                hk_lot_map_path = mod_config["hk_lot_map_path"]
+            except Exception:
+                hk_lot_map_path = None
+        hk_lot_map = getattr(mod_config, "hk_lot_map", None)
+        if hk_lot_map is None:
+            try:
+                hk_lot_map = mod_config.get("hk_lot_map")
+            except Exception:
+                hk_lot_map = None
         if not data_dir:
             cfg = getattr(env, "config", None)
             base = None
@@ -41,7 +53,13 @@ class FutuDSMod(AbstractMod):
                     data_dir = bundle
         if not data_dir:
             data_dir = os.getenv("FUTU_DATA_PATH")
-        env.set_data_source(FutuDataSource(data_dir=data_dir))
+        env.set_data_source(
+            FutuDataSource(
+                data_dir=data_dir,
+                hk_lot_map_path=hk_lot_map_path,
+                hk_lot_map=hk_lot_map,
+            )
+        )
 
     def tear_down(self, code, exception=None):
         pass

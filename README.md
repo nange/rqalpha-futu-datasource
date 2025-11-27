@@ -67,6 +67,54 @@ def test_run_with_futu_datasource():
     run_func(init=init, handle_bar=handle_bar, config=config)
 ```
 
+### 配置港股每手（Board Lot）
+
+为避免网络依赖，港股每手数量支持以本地方式配置，二选一：
+
+- 通过 CSV 文件路径：
+
+  在模块配置中增加 `hk_lot_map_path`，CSV 至少包含两列：`code` 与 `lot_size`（也支持列名 `lot` 或 `board_lot`）。例如：
+
+  ```csv
+  code,lot_size
+  00700,200
+  00005,500
+  ```
+
+  配置示例：
+
+  ```python
+  config = {
+      "mod": {
+          "futu_ds": {
+              "enabled": True,
+              "lib": "rqalpha_futu_datasource.mod_futu_ds",
+              "hk_lot_map_path": os.path.abspath("tests/data/hk_lot_map.csv"),
+          }
+      },
+  }
+  ```
+
+- 通过内存字典：
+
+  在模块配置中增加 `hk_lot_map`：
+
+  ```python
+  config = {
+      "mod": {
+          "futu_ds": {
+              "enabled": True,
+              "lib": "rqalpha_futu_datasource.mod_futu_ds",
+              "hk_lot_map": {"00700": 200, "00005": 500},
+          }
+      },
+  }
+  ```
+
+优先级：当两者同时存在时，字典 `hk_lot_map` 的取值优先于 CSV 文件。
+
+如果不配置港股每手映射表，默认每手为100。
+
 ### 指定富途数据存储目录有三种方式
 
 1. 在RQAlpha的模块配置中指定：
@@ -110,7 +158,7 @@ def test_run_with_futu_datasource():
   - 美股：`AAPL.XNAS` -> `US.AAPL`  (纳斯达克交易所)
   - 美股：`TSM.XNYS` -> `US.TSM`  (纽约交易所)
 - 限制：
-  - 仅支持股票数据，不支持期货、期权等。
+  - 仅支持股票数据，不支持期货、期权等其他品种。
   - 原始从富途下载的数据就只能是股票前复权数据。不支持其他复权方式。
   - 数据不能增量更新，有新数据需求只能重新下载全量数据(富途的OpenD进程会本地缓存数据，所以不用太担心此问题)。
   - 回测频率支持周期 `1m`、`1d`(RQAlpha框架限制)，在handle_bar回调函数中，可以查询的历史数据周期为:`1m`, `3m`, `5m`, `1d`, `1w`(RQAlpha框架限制，无法支持到月级别)。

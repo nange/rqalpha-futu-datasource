@@ -22,7 +22,12 @@ class FutuDataSource(AbstractDataSource):
     在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换rqalpha默认的数据源。
     """
 
-    def __init__(self, data_dir: str | None = None):
+    def __init__(
+        self,
+        data_dir: str | None = None,
+        hk_lot_map: Dict[str, int] | None = None,
+        hk_lot_map_path: str | None = None,
+    ):
         import os
         from .utils import rq_to_futu_code, futu_path, dt_to_int
 
@@ -33,6 +38,16 @@ class FutuDataSource(AbstractDataSource):
         self._futu_path = futu_path
         self._dt_to_int = dt_to_int
         self._cache: Dict[Tuple[str, str], pandas.DataFrame] = {}
+        self._lot_size_cache: Dict[str, int] = {}
+        self._hk_lot_map: Dict[str, int] = {}
+        if hk_lot_map:
+            for k, v in hk_lot_map.items():
+                try:
+                    self._hk_lot_map[str(k).upper()] = int(v)
+                except Exception:
+                    continue
+        if hk_lot_map_path:
+            self._load_hk_lot_map_from_path(hk_lot_map_path)
 
     def _load_df(self, order_book_id: str, frequency: str) -> pandas.DataFrame | None:
         market, symbol = self._rq_to_futu_code(order_book_id)
@@ -85,7 +100,7 @@ class FutuDataSource(AbstractDataSource):
                 dic = {
                     "order_book_id": f"{code}.{exch}",
                     "symbol": code,
-                    "round_lot": 100,
+                    "round_lot": self._get_round_lot(exch, code),
                     "exchange": exch,
                     "type": INSTRUMENT_TYPE.CS.name,
                     "listed_date": "1990-01-01",
@@ -95,6 +110,60 @@ class FutuDataSource(AbstractDataSource):
             return instruments
         # 简化实现：当未指定 id_or_syms 时返回空列表
         return instruments
+
+    def _get_round_lot(self, exch: str, code: str) -> int:
+        key = f"{code}.{exch}"
+        val = self._lot_size_cache.get(key)
+        if val:
+            return val
+        if exch in ("XSHE", "XSHG"):
+            self._lot_size_cache[key] = 100
+            return 100
+        if exch in ("XNAS", "XNYS"):
+            self._lot_size_cache[key] = 1
+            return 1
+        if exch == "XHKG":
+            lot = self._hk_lot_map.get(code.upper())
+            if lot:
+                self._lot_size_cache[key] = int(lot)
+                return int(lot)
+            self._lot_size_cache[key] = 100
+            return 100
+        self._lot_size_cache[key] = 100
+        return 100
+
+    def _load_hk_lot_map_from_path(self, path: str) -> None:
+        try:
+            df = pandas.read_csv(path)
+        except Exception:
+            return
+        cols = [c.lower() for c in df.columns]
+        has_code = any(c in ("code", "symbol") for c in cols)
+        has_lot = any(c in ("lot", "lot_size", "board_lot") for c in cols)
+        if not (has_code and has_lot):
+            return
+        code_col = (
+            "code"
+            if "code" in df.columns
+            else ("symbol" if "symbol" in df.columns else None)
+        )
+        lot_col = None
+        for c in ("lot", "lot_size", "board_lot"):
+            if c in df.columns:
+                lot_col = c
+                break
+        if not code_col or not lot_col:
+            return
+        for _, row in df.iterrows():
+            try:
+                code = str(row[code_col]).strip().upper()
+                lot = int(row[lot_col])
+            except Exception:
+                continue
+            if code.isdigit() and len(code) < 5:
+                code = code.zfill(5)
+            if code and code not in self._hk_lot_map:
+                self._hk_lot_map[code] = lot
 
     def _collect_trading_days(self) -> pandas.DatetimeIndex:
         from pathlib import Path

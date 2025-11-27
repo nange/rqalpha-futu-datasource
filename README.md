@@ -1,6 +1,6 @@
 # rqalpha-futu-datasource
 
-由于RQAlpha股票回测框架提供的数据，需要付费(还挺贵)，并且只有A股的数据。
+由于RQAlpha回测框架提供的数据，需要付费(还挺贵)，并且只有A股的数据。
 因此为RQAlpha框架提供自定义的Futu(富途)数据源，同时支持A股、港股、美股数据。用于基于rqalpha框架的股票回测。
 
 ## 用法
@@ -37,11 +37,14 @@ make sync
 
 ### 在 RQAlpha 中启用 Futu 数据源
 
-通过扩展模块替换默认DataSource。参考：[test_rqalpha_example.py](tests/test_rqalpha.py), [mod_futu_ds.py](src/rqalpha_futu_datasource/mod_futu_ds.py)
+通过扩展模块替换默认DataSource。参考：[test_rqalpha.py](tests/test_rqalpha.py), [mod_futu_ds.py](src/rqalpha_futu_datasource/mod_futu_ds.py)
 
 关键代码：
 
 ```python
+from rqalpha import run_func
+
+
 def test_run_with_futu_datasource():
     config = {
         "base": {
@@ -102,7 +105,6 @@ def test_run_with_futu_datasource():
 
 ### 限制及说明
 
-- 已实现关键股票回测相关方法，包括 `get_instruments`, `history_bars`、`get_bar`、`get_trading_calendar`, `available_data_range`、`is_suspended`。
 - RQAlpha与富途股票代码之间的对应关系是：
   - A股：`000001.XSHE` -> `SZ.000001` (深圳交易所)
   - A股：`603728.XSHG` -> `SH.603728` (上海交易所)
@@ -113,4 +115,4 @@ def test_run_with_futu_datasource():
   - 仅支持股票数据，不支持期货、期权等。
   - 原始从富途下载的数据就只能是股票前复权数据。不支持其他复权方式。
   - 数据不能增量更新，有新数据需求只能重新下载全量数据(富途的OpenD进程会本地缓存数据，所以不用太担心此问题)。
-  - 回测频率支持周期 `1d`、`1m`(RQAlpha框架限制)，在handle_bar回调函数中，可以查询的历史数据周期为:`1m`, `3m`, `5m`, `1d`, `1w`(RQAlpha框架限制，无法支持到月级别)。
+  - 回测频率支持周期 `1m`、`1d`(RQAlpha框架限制)，在handle_bar回调函数中，可以查询的历史数据周期为:`1m`, `3m`, `5m`, `1d`, `1w`(RQAlpha框架限制，无法支持到月级别)。

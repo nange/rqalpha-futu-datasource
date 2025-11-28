@@ -39,7 +39,7 @@ make sync
 
 通过扩展模块替换默认DataSource。参考：[test_rqalpha.py](tests/test_rqalpha.py), [mod_futu_ds.py](src/rqalpha_futu_datasource/mod_futu_ds.py)
 
-关键代码：
+#### 1. 基础配置
 
 ```python
 from rqalpha import run_func
@@ -67,53 +67,37 @@ def test_run_with_futu_datasource():
     run_func(init=init, handle_bar=handle_bar, config=config)
 ```
 
-### 配置港股每手（Board Lot）
+#### 2. 配置港股每手（Board Lot）
 
-为避免网络依赖，港股每手数量支持以本地方式配置，二选一：
+为避免网络依赖，港股每手数量支持以本地方式配置。如果不配置港股每手映射表，默认每手为100。支持以下两种方式（优先使用内存字典）：
 
-- 通过 CSV 文件路径：
+- **通过 CSV 文件路径**：配置 `hk_lot_map_path`。CSV 需包含 `code` 与 `lot_size`（或 `lot`/`board_lot`）列。
+- **通过内存字典**：配置 `hk_lot_map`。
 
-  在模块配置中增加 `hk_lot_map_path`，CSV 至少包含两列：`code` 与 `lot_size`（也支持列名 `lot` 或 `board_lot`）。例如：
+配置示例：
 
-  ```csv
-  code,lot_size
-  00700,200
-  00005,500
-  ```
+```python
+config = {
+    "mod": {
+        "futu_ds": {
+            "enabled": True,
+            "lib": "rqalpha_futu_datasource.mod_futu_ds",
+            # 方式一：指定 CSV 文件路径
+            "hk_lot_map_path": os.path.abspath("tests/data/hk_lot_map.csv"),
+            # 方式二：直接传入字典 (优先级更高)
+            "hk_lot_map": {"00700": 200, "00005": 500},
+        }
+    },
+}
+```
 
-  配置示例：
+CSV 文件示例：
 
-  ```python
-  config = {
-      "mod": {
-          "futu_ds": {
-              "enabled": True,
-              "lib": "rqalpha_futu_datasource.mod_futu_ds",
-              "hk_lot_map_path": os.path.abspath("tests/data/hk_lot_map.csv"),
-          }
-      },
-  }
-  ```
-
-- 通过内存字典：
-
-  在模块配置中增加 `hk_lot_map`：
-
-  ```python
-  config = {
-      "mod": {
-          "futu_ds": {
-              "enabled": True,
-              "lib": "rqalpha_futu_datasource.mod_futu_ds",
-              "hk_lot_map": {"00700": 200, "00005": 500},
-          }
-      },
-  }
-  ```
-
-优先级：当两者同时存在时，字典 `hk_lot_map` 的取值优先于 CSV 文件。
-
-如果不配置港股每手映射表，默认每手为100。
+```csv
+code,lot_size
+00700,200
+00005,500
+```
 
 ### 指定富途数据存储目录有三种方式
 

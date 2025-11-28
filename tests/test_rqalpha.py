@@ -1,6 +1,6 @@
 import os
 from rqalpha import run_func
-from rqalpha.api import subscribe, history_bars
+from rqalpha.api import subscribe, history_bars, current_snapshot
 
 
 def init(context):
@@ -203,6 +203,16 @@ def handle_bar_1m(context, bar_dict):
     assert float(obj.close) == 220.190778519
     assert float(obj.volume) == 1869295.0
     assert float(obj.total_turnover) == 412994919.211
+
+    obj = current_snapshot("000001.XSHE")
+    assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 09:31:00"
+    assert float(obj.open) == 10.782
+    assert float(obj.high) == 10.792
+    assert float(obj.low) == 10.772
+    assert float(obj.last) == 10.792
+    assert float(obj.volume) == 3053120.0
+    assert float(obj.total_turnover) == 34741385.81
+
 
 
 def test_run_with_futu_datasource():

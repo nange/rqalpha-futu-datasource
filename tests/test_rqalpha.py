@@ -214,7 +214,6 @@ def handle_bar_1m(context, bar_dict):
     assert float(obj.total_turnover) == 34741385.81
 
 
-
 def test_run_with_futu_datasource():
     config = {
         "base": {

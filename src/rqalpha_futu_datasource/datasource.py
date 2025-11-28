@@ -454,9 +454,115 @@ class FutuDataSource(AbstractDataSource):
 
         :return: :class:`~Snapshot`
 
-        TODO: 此函数似乎可以实现
         """
-        raise NotImplementedError
+        freq = frequency.lower()
+        if freq not in SUPPORTED_FREQUENCIES:
+            raise ValueError("unsupported frequency")
+        if freq == "1d":
+            bar = self.get_bar(instrument, dt, "1d")
+            if not bar:
+                return None
+            d = {
+                "datetime": self._dt_to_int(pandas.Timestamp(dt).to_pydatetime(), True),
+                "open": float(bar["open"]),
+                "high": float(bar["high"]),
+                "low": float(bar["low"]),
+                "last": float(bar["close"]),
+                "volume": float(bar["volume"]),
+                "total_turnover": float(bar["total_turnover"]),
+            }
+            key = (instrument.order_book_id, "1d")
+            df_prev = self._cache.get(key)
+            if df_prev is None:
+                df_prev = self._load_df(instrument.order_book_id, "1d")
+                if df_prev is not None:
+                    self._cache[key] = df_prev
+            prev_close = 0.0
+            if df_prev is not None and not df_prev.empty:
+                prev_rows = df_prev[df_prev["datetime"].dt.date < dt.date()]
+                if not prev_rows.empty:
+                    prev_close = float(prev_rows.iloc[-1]["close"])
+            d["prev_close"] = prev_close
+            d["limit_up"] = 0.0
+            d["limit_down"] = 0.0
+            return TickObject(instrument, d)
+        if freq != "1m":
+            raise ValueError("snapshot only supports 1m or 1d frequency")
+        key = (instrument.order_book_id, "1m")
+        df = self._cache.get(key)
+        if df is None:
+            df = self._load_df(instrument.order_book_id, "1m")
+            if df is None:
+                return None
+            self._cache[key] = df
+        ts = pandas.Timestamp(dt)
+        day_rows = df[df["datetime"].dt.date == ts.date()]
+        upto_rows = day_rows[day_rows["datetime"] <= ts]
+        if upto_rows.empty:
+            prev_close = 0.0
+            key_d = (instrument.order_book_id, "1d")
+            df_d = self._cache.get(key_d)
+            if df_d is None:
+                df_d = self._load_df(instrument.order_book_id, "1d")
+                if df_d is not None:
+                    self._cache[key_d] = df_d
+            if df_d is not None and not df_d.empty:
+                prev_rows = df_d[df_d["datetime"].dt.date < ts.date()]
+                if not prev_rows.empty:
+                    prev_close = float(prev_rows.iloc[-1]["close"])
+            return TickObject(
+                instrument,
+                {
+                    "datetime": ts.to_pydatetime(),
+                    "open": 0.0,
+                    "high": 0.0,
+                    "low": 0.0,
+                    "last": 0.0,
+                    "volume": 0.0,
+                    "total_turnover": 0.0,
+                    "prev_close": prev_close,
+                    "limit_up": 0.0,
+                    "limit_down": 0.0,
+                },
+            )
+        vol_sum = float(upto_rows["volume"].astype(float).sum())
+        tt_sum = float(upto_rows["total_turnover"].astype(float).sum())
+        if vol_sum == 0.0:
+            open_price = 0.0
+            high_price = 0.0
+            low_price = 0.0
+            last_price = 0.0
+        else:
+            open_price = float(day_rows.iloc[0]["open"])
+            high_price = float(upto_rows["high"].astype(float).max())
+            low_price = float(upto_rows["low"].astype(float).min())
+            last_price = float(upto_rows.iloc[-1]["close"])
+        prev_close = 0.0
+        key_d = (instrument.order_book_id, "1d")
+        df_d = self._cache.get(key_d)
+        if df_d is None:
+            df_d = self._load_df(instrument.order_book_id, "1d")
+            if df_d is not None:
+                self._cache[key_d] = df_d
+        if df_d is not None and not df_d.empty:
+            prev_rows = df_d[df_d["datetime"].dt.date < ts.date()]
+            if not prev_rows.empty:
+                prev_close = float(prev_rows.iloc[-1]["close"])
+        return TickObject(
+            instrument,
+            {
+                "datetime": ts.to_pydatetime(),
+                "open": open_price,
+                "high": high_price,
+                "low": low_price,
+                "last": last_price,
+                "volume": vol_sum,
+                "total_turnover": tt_sum,
+                "prev_close": prev_close,
+                "limit_up": 0.0,
+                "limit_down": 0.0,
+            },
+        )
 
     def get_trading_minutes_for(self, instrument, trading_dt):
         """

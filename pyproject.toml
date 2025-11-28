@@ -1,9 +1,11 @@
 [project]
 name = "rqalpha-futu-datasource"
-version = "0.1.0"
+version = "1.0.0"
 description = "Futu datasource for rqalpha"
 readme = "README.md"
 requires-python = ">=3.11, <4.0"
+authors = [{ name = "nange", email = "cctonange@gmail.com" }]
+
 dependencies = ["futu-api>=9.4.5408", "rqalpha>=5.6.4.1"]
 
 [build-system]

@@ -5,11 +5,6 @@ from rqalpha.interface import AbstractMod
 from .datasource import FutuDataSource
 
 
-__config__ = {
-    "data_dir": None,
-}
-
-
 def load_mod():
     return FutuDSMod()
 

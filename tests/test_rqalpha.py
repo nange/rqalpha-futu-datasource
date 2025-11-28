@@ -222,6 +222,7 @@ def test_run_with_futu_datasource():
                 "enabled": True,
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
                 "futu_data_path": os.path.abspath("tests/data"),
+                "hk_lot_map_path": os.path.abspath("tests/data/hk_lot_map.csv"),
             }
         },
     }
@@ -244,6 +245,7 @@ def test_run_with_futu_datasource_1m():
                 "enabled": True,
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
                 "futu_data_path": os.path.abspath("tests/data"),
+                "hk_lot_map_path": os.path.abspath("tests/data/hk_lot_map.csv"),
             }
         },
     }

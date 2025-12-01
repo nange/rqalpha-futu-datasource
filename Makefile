@@ -53,3 +53,9 @@ sync:
 
 build:
 	uv build
+
+publish:
+	uv publish
+
+publish-test:
+	uv publish --publish-url https://test.pypi.org/legacy/

@@ -179,7 +179,7 @@ class FutuDataSource(AbstractDataSource):
                 continue
             ts = pandas.to_datetime(df["time_key"]).dt.normalize()
             if "volume" in df.columns:
-                mask = df["volume"].astype(float) > 0.0
+                mask = df["volume"].astype(numpy.float64) > 0.0
                 ts = ts[mask]
             days.extend(ts.tolist())
         if not days:
@@ -418,7 +418,7 @@ class FutuDataSource(AbstractDataSource):
             if f == "datetime":
                 out[f] = ts_col
             elif f in ("open", "high", "low", "close", "volume", "total_turnover"):
-                out[f] = data[f].astype(float)
+                out[f] = data[f].astype(numpy.float64)
             else:
                 out[f] = numpy.nan
         dtype = [
@@ -525,8 +525,8 @@ class FutuDataSource(AbstractDataSource):
                     "limit_down": 0.0,
                 },
             )
-        vol_sum = float(upto_rows["volume"].astype(float).sum())
-        tt_sum = float(upto_rows["total_turnover"].astype(float).sum())
+        vol_sum = float(upto_rows["volume"].astype(numpy.float64).sum())
+        tt_sum = float(upto_rows["total_turnover"].astype(numpy.float64).sum())
         if vol_sum == 0.0:
             open_price = 0.0
             high_price = 0.0
@@ -534,8 +534,8 @@ class FutuDataSource(AbstractDataSource):
             last_price = 0.0
         else:
             open_price = float(day_rows.iloc[0]["open"])
-            high_price = float(upto_rows["high"].astype(float).max())
-            low_price = float(upto_rows["low"].astype(float).min())
+            high_price = float(upto_rows["high"].astype(numpy.float64).max())
+            low_price = float(upto_rows["low"].astype(numpy.float64).min())
             last_price = float(upto_rows.iloc[-1]["close"])
         prev_close = 0.0
         key_d = (instrument.order_book_id, "1d")

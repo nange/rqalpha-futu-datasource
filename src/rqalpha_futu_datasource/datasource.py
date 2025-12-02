@@ -204,19 +204,19 @@ class FutuDataSource(AbstractDataSource):
     ) -> pandas.DataFrame:
         return pandas.DataFrame()
 
-    def get_dividend(self, instrument: Instrument) -> numpy.ndarray:
+    def get_dividend(self, instrument: Instrument) -> numpy.ndarray | None:
         """
         获取股票/基金分红信息
         注意：回测不用实现
         """
-        raise NotImplementedError
+        return None
 
-    def get_split(self, instrument: Instrument) -> numpy.ndarray:
+    def get_split(self, instrument: Instrument) -> numpy.ndarray | None:
         """
         获取拆股信息
         注意：回测不用实现
         """
-        raise NotImplementedError
+        return None
 
     def get_bar(
         self, instrument: Instrument, dt: datetime.datetime, frequency: str

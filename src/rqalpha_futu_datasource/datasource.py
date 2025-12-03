@@ -428,6 +428,12 @@ class FutuDataSource(AbstractDataSource):
                 out[f] = data[f].astype(numpy.float64)
             else:
                 out[f] = numpy.nan
+
+        if isinstance(fields, str):
+            if fields == "datetime":
+                return out[fields].values.astype(numpy.uint64)
+            return out[fields].values.astype(numpy.float64)
+
         dtype = [
             (f, numpy.float64) if f != "datetime" else ("datetime", numpy.uint64)
             for f in fields_list

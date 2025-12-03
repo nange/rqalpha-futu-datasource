@@ -1,5 +1,6 @@
 import datetime
 import pandas
+import numpy
 from unittest.mock import patch
 
 from rqalpha_futu_datasource.datasource import FutuDataSource
@@ -140,3 +141,72 @@ def test_board_type():
         instruments = ds.get_instruments(["600000.XSHG"])
         assert len(instruments) == 1
         assert instruments[0].board_type == "MainBoard"
+
+
+def test_history_bars_single_field():
+    ds = FutuDataSource(data_dir="tests/data")
+    ins = DummyInstrument("000001.XSHE")
+    dt = datetime.datetime(2024, 11, 6, 15)
+
+    # Test datetime field (should be uint64)
+    arr_dt = ds.history_bars(
+        ins,
+        2,
+        "1d",
+        fields="datetime",
+        dt=dt,
+    )
+    assert arr_dt is not None
+    assert isinstance(arr_dt, numpy.ndarray)
+    assert arr_dt.dtype == numpy.uint64
+    assert len(arr_dt) == 2
+    assert arr_dt[-1] == 20241105000000
+
+    # Test float field (should be float64)
+    arr_close = ds.history_bars(
+        ins,
+        2,
+        "1d",
+        fields="close",
+        dt=dt,
+    )
+    assert arr_close is not None
+    assert isinstance(arr_close, numpy.ndarray)
+    assert arr_close.dtype == numpy.float64
+    assert len(arr_close) == 2
+    assert numpy.isclose(arr_close[-1], 11.052)
+
+
+def test_history_bars_multi_fields():
+    ds = FutuDataSource(data_dir="tests/data")
+    ins = DummyInstrument("000001.XSHE")
+    dt = datetime.datetime(2024, 11, 6, 15)
+
+    # Test multiple fields mixing datetime and floats
+    fields = ["datetime", "open", "close", "volume"]
+    arr = ds.history_bars(
+        ins,
+        2,
+        "1d",
+        fields=fields,
+        dt=dt,
+    )
+
+    assert arr is not None
+    assert isinstance(arr, numpy.ndarray)
+
+    # Check if it is a structured array
+    assert arr.dtype.names == tuple(fields)
+
+    # Check individual field types in the structured array
+    assert arr.dtype["datetime"] == numpy.uint64
+    assert arr.dtype["open"] == numpy.float64
+    assert arr.dtype["close"] == numpy.float64
+    assert arr.dtype["volume"] == numpy.float64
+
+    # Check values
+    assert len(arr) == 2
+    # Check last record values
+    last_record = arr[-1]
+    assert last_record["datetime"] == 20241105000000
+    assert numpy.isclose(last_record["close"], 11.052)

@@ -97,12 +97,19 @@ class FutuDataSource(AbstractDataSource):
                 minute_path = self._futu_path(self._data_dir, market, symbol, "1m")
                 if not (os.path.exists(daily_path) or os.path.exists(minute_path)):
                     continue
+                board_type = "MainBoard"
+                if code.startswith("68"):
+                    board_type = "KSH"
+                elif code.startswith("30"):
+                    board_type = "GEM"
+
                 dic = {
                     "order_book_id": f"{code}.{exch}",
                     "symbol": code,
                     "round_lot": self._get_round_lot(exch, code),
                     "exchange": exch,
                     "type": INSTRUMENT_TYPE.CS.name,
+                    "board_type": board_type,
                     "listed_date": "1990-01-01",
                     "de_listed_date": "2999-12-31",
                 }

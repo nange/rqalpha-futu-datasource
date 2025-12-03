@@ -1,5 +1,6 @@
 import datetime
 import pandas
+from unittest.mock import patch
 
 from rqalpha_futu_datasource.datasource import FutuDataSource
 from rqalpha.model.tick import TickObject
@@ -113,3 +114,29 @@ def test_current_snapshot_daily():
     assert float(tick.volume) == 158981111.0
     assert float(tick.total_turnover) == 1821423447.06
     assert float(tick.prev_close) == 10.782
+
+
+def test_board_type():
+    with patch("os.path.exists") as mock_exists:
+        mock_exists.return_value = True
+        ds = FutuDataSource(data_dir="dummy_dir")
+
+        # Test KSH (68xxxx)
+        instruments = ds.get_instruments(["688001.XSHG"])
+        assert len(instruments) == 1
+        assert instruments[0].board_type == "KSH"
+
+        # Test GEM (30xxxx)
+        instruments = ds.get_instruments(["300001.XSHE"])
+        assert len(instruments) == 1
+        assert instruments[0].board_type == "GEM"
+
+        # Test MainBoard (00xxxx)
+        instruments = ds.get_instruments(["000001.XSHE"])
+        assert len(instruments) == 1
+        assert instruments[0].board_type == "MainBoard"
+
+        # Test MainBoard (60xxxx)
+        instruments = ds.get_instruments(["600000.XSHG"])
+        assert len(instruments) == 1
+        assert instruments[0].board_type == "MainBoard"

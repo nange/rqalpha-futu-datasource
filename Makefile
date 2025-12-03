@@ -52,7 +52,7 @@ sync:
 	uv sync
 
 build:
-	uv build
+	uv --no-cache build
 
 publish:
 	uv publish

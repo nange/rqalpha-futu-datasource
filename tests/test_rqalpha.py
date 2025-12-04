@@ -241,7 +241,7 @@ def test_run_with_futu_datasource():
             "sys_progress": {
                 "enabled": True,
                 "show": True,
-            }
+            },
         },
     }
     run_func(init=init, handle_bar=handle_bar, config=config)

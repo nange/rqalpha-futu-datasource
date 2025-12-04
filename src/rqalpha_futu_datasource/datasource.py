@@ -350,6 +350,7 @@ class FutuDataSource(AbstractDataSource):
             raise ValueError("invalid adjust_type")
         if adjust_type != "pre":
             raise ValueError("only pre adjust supported")
+
         key = (instrument.order_book_id, frequency)
         df = self._cache.get(key)
         if df is None:
@@ -357,20 +358,27 @@ class FutuDataSource(AbstractDataSource):
             if df is None:
                 return None
             self._cache[key] = df
+
         if frequency == "1d":
-            cutoff_date = dt.date()
+            if isinstance(dt, datetime.datetime):
+                cutoff_date = dt.date()
+                is_midnight = (
+                    dt.time().hour == 0
+                    and dt.time().minute == 0
+                    and dt.time().second == 0
+                    and dt.time().microsecond == 0
+                )
+            else:
+                cutoff_date = dt
+                is_midnight = True
+
             data = df
             if skip_suspended:
                 data = data[data["volume"] > 0]
             uniq = sorted(set(data["datetime"].dt.date.tolist()))
             if not uniq:
                 return None
-            is_midnight = (
-                dt.time().hour == 0
-                and dt.time().minute == 0
-                and dt.time().second == 0
-                and dt.time().microsecond == 0
-            )
+
             if include_now:
                 mask = data["datetime"].dt.date <= cutoff_date
             else:

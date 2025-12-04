@@ -183,7 +183,7 @@ class FutuDataSource(AbstractDataSource):
         target_markets = []
         if self._markets:
             target_markets.extend(self._markets)
-        
+
         if not target_markets:
             raise ValueError(
                 "FutuDataSource: benchmark or markets must be configured to determine trading calendar."

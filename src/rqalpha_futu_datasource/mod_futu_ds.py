@@ -3,6 +3,7 @@ from typing import Optional
 
 from rqalpha.interface import AbstractMod
 from .datasource import FutuDataSource
+from .utils import rq_to_futu_code
 
 
 def load_mod():
@@ -48,11 +49,37 @@ class FutuDSMod(AbstractMod):
                     data_dir = bundle
         if not data_dir:
             data_dir = os.getenv("FUTU_DATA_PATH")
+
+        markets = getattr(mod_config, "markets", None)
+        if markets is None:
+            try:
+                markets = mod_config.get("markets")
+            except Exception:
+                pass
+
+        benchmark = None
+        try:
+            sys_analyser = getattr(env.config.mod, "sys_analyser", None)
+            if sys_analyser:
+                benchmark = getattr(sys_analyser, "benchmark", None)
+                if benchmark is None:
+                    benchmark = sys_analyser.get("benchmark")
+        except Exception:
+            pass
+
+        if benchmark:
+            try:
+                market, _ = rq_to_futu_code(benchmark)
+                markets = [market]
+            except Exception:
+                pass
+
         env.set_data_source(
             FutuDataSource(
                 data_dir=data_dir,
                 hk_lot_map_path=hk_lot_map_path,
                 hk_lot_map=hk_lot_map,
+                markets=markets,
             )
         )
 

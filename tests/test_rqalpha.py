@@ -232,6 +232,7 @@ def test_run_with_futu_datasource():
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
                 "futu_data_path": os.path.abspath("tests/data"),
                 "hk_lot_map_path": os.path.abspath("tests/data/hk_lot_map.csv"),
+                #"markets": ["SZ", "SH"],
             },
             "sys_analyser": {
                 "enabled": True,
@@ -264,6 +265,7 @@ def test_run_with_futu_datasource_1m():
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
                 "futu_data_path": os.path.abspath("tests/data"),
                 "hk_lot_map_path": os.path.abspath("tests/data/hk_lot_map.csv"),
+                "markets": ["SZ", "SH"],
             }
         },
     }

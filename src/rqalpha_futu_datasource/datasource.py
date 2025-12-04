@@ -27,6 +27,7 @@ class FutuDataSource(AbstractDataSource):
         data_dir: str | None = None,
         hk_lot_map: Dict[str, int] | None = None,
         hk_lot_map_path: str | None = None,
+        markets: List[str] | None = None,
     ):
         import os
         from .utils import rq_to_futu_code, futu_path, dt_to_int
@@ -40,6 +41,7 @@ class FutuDataSource(AbstractDataSource):
         self._cache: Dict[Tuple[str, str], pandas.DataFrame] = {}
         self._lot_size_cache: Dict[str, int] = {}
         self._hk_lot_map: Dict[str, int] = {}
+        self._markets = markets
         if hk_lot_map:
             for k, v in hk_lot_map.items():
                 try:
@@ -177,18 +179,33 @@ class FutuDataSource(AbstractDataSource):
 
         days = []
         root = Path(self._data_dir)
-        for p in root.rglob("1d.csv"):
-            try:
-                df = pandas.read_csv(p)
-            except Exception:
+
+        target_markets = []
+        if self._markets:
+            target_markets.extend(self._markets)
+        
+        if not target_markets:
+            raise ValueError(
+                "FutuDataSource: benchmark or markets must be configured to determine trading calendar."
+            )
+
+        for market in target_markets:
+            market_path = root / market
+            if not market_path.exists():
                 continue
-            if "time_key" not in df.columns:
-                continue
-            ts = pandas.to_datetime(df["time_key"]).dt.normalize()
-            if "volume" in df.columns:
-                mask = df["volume"].astype(numpy.float64) > 0.0
-                ts = ts[mask]
-            days.extend(ts.tolist())
+            for p in market_path.rglob("1d.csv"):
+                try:
+                    df = pandas.read_csv(p)
+                except Exception:
+                    continue
+                if "time_key" not in df.columns:
+                    continue
+                ts = pandas.to_datetime(df["time_key"]).dt.normalize()
+                if "volume" in df.columns:
+                    mask = df["volume"].astype(numpy.float64) > 0.0
+                    ts = ts[mask]
+                days.extend(ts.tolist())
+
         if not days:
             return pandas.DatetimeIndex([])
         idx = pandas.DatetimeIndex(sorted(set(days)))

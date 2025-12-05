@@ -112,6 +112,9 @@ code,lot_size
             "sys_analyser": {
                 "enabled": True,
                 "benchmark": "000001.XSHE",  # 自动推断为 SZ 市场
+                # "plot": True,  # 开启后，会生成回测报告图片
+                # "output_file": "result.pkl", # 回测结果保存文件，默认不保存
+                # "report_save_path": "backtest_report", # 回测报告保存路径目录(另外一种格式)，默认不保存
             },
             "futu_ds": {
                 "enabled": True,

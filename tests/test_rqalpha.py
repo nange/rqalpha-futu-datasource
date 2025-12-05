@@ -236,8 +236,10 @@ def test_run_with_futu_datasource():
             },
             "sys_analyser": {
                 "enabled": True,
-                # "plot": True,
                 "benchmark": "600000.XSHG",
+                # "plot": True,  # 开启后，会生成回测报告图片
+                # "output_file": "result.pkl", # 回测结果保存文件，默认不保存
+                # "report_save_path": "backtest_report", # 回测报告保存路径目录(另外一种格式)，默认不保存
             },
             "sys_progress": {
                 "enabled": True,

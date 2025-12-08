@@ -19,11 +19,14 @@ def mod_config():
     return MagicMock()
 
 
-@pytest.mark.parametrize("market, expected_markets", [
-    ("cn", ["SH", "SZ"]),
-    ("hk", ["HK"]),
-    ("us", ["US"]),
-])
+@pytest.mark.parametrize(
+    "market, expected_markets",
+    [
+        ("cn", ["SH", "SZ"]),
+        ("hk", ["HK"]),
+        ("us", ["US"]),
+    ],
+)
 def test_start_up_markets(mod, env, mod_config, market, expected_markets):
     # Mock env.config.base.market
     env.config.base.market = market

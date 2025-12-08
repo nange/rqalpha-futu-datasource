@@ -1,6 +1,6 @@
 [project]
 name = "rqalpha-futu-datasource"
-version = "1.1.0"
+version = "1.2.0"
 description = "Futu datasource for rqalpha"
 readme = "README.md"
 requires-python = ">=3.11, <4.0"
@@ -12,6 +12,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Intended Audience :: Developers",

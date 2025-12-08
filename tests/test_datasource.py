@@ -63,8 +63,8 @@ def test_is_suspended():
 def test_available_data_range():
     ds = FutuDataSource(data_dir="tests/data")
     e, latest = ds.available_data_range("1d")
-    assert e == datetime.date(2024, 1, 2)
-    assert latest == datetime.date(2024, 12, 31)
+    assert e == datetime.date(2024, 10, 2)
+    assert latest == datetime.date(2024, 11, 29)
 
 
 def test_current_snapshot_minute_aggregation():

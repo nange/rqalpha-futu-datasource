@@ -101,46 +101,28 @@ code,lot_size
 
 #### 3. 配置交易日历范围（Markets）
 
-`rqalpha-futu-datasource` 需要知道在哪个市场中查找交易日历数据。这可以通过以下两种方式确定：
+`rqalpha-futu-datasource` 需要知道在哪个市场中查找交易日历数据。这可以通过 `rqalpha` 的 `base` 配置中的 `market` 参数来确定：
 
-1. **通过 `sys_analyser` 的 `benchmark` 配置（推荐）**：
-    如果配置了 benchmark（基准），数据源会自动推断 benchmark 所在的市场，并使用该市场的交易日历。
-
-    ```python
-    config = {
-        "mod": {
-            "sys_analyser": {
-                "enabled": True,
-                "benchmark": "000001.XSHE",  # 自动推断为 SZ 市场
-                # "plot": True,  # 开启后，会生成回测报告图片
-                # "output_file": "result.pkl", # 回测结果保存文件，默认不保存
-                # "report_save_path": "backtest_report", # 回测报告保存路径目录(另外一种格式)，默认不保存
-            },
-            "futu_ds": {
-                "enabled": True,
-                # ... 其他配置
-            }
+```python
+config = {
+    "base": {
+        "market": "cn",  # 可选值: "cn" (默认), "hk", "us"
+        # ... 其他 base 配置
+    },
+    "mod": {
+        "futu_ds": {
+            "enabled": True,
+            # ... 其他配置
         }
     }
-    ```
+}
+```
 
-2. **通过 `markets` 显式配置**：
-    如果没有配置 benchmark，或者需要加载多个市场的日历数据，可以在 `futu_ds` 中显式指定 `markets` 列表。
+- `cn`: 对应 A 股市场（包含 SH 和 SZ）。
+- `hk`: 对应港股市场（HK）。
+- `us`: 对应美股市场（US）。
 
-    ```python
-    config = {
-        "mod": {
-            "futu_ds": {
-                "enabled": True,
-                # 显式指定需要扫描的市场，如 ["SZ", "SH", "HK", "US"]
-                "markets": ["SZ", "SH", "HK"], 
-                # ... 其他配置
-            }
-        }
-    }
-    ```
-
-> **注意**：如果既没有配置 `benchmark` 也没有配置 `markets`，数据源初始化时会抛出错误。
+如果未配置 `base.market`，默认使用 `cn`。
 
 ### 指定富途数据存储目录有三种方式
 

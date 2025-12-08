@@ -17,7 +17,7 @@ make sync
 
 ### 安装
 
-- `pip install rqalpha-futu-datasource`
+- `pip install rqalpha-futu-datasource` 或 `uv add rqalpha-futu-datasource`(uv管理依赖)
 
 ### 下载富途原始数据到本地
 

@@ -24,10 +24,10 @@ class FutuDataSource(AbstractDataSource):
 
     def __init__(
         self,
-        data_dir: str | None = None,
+        data_dir: str,
+        markets: List[str] = ["SH", "SZ"],
         hk_lot_map: Dict[str, int] | None = None,
         hk_lot_map_path: str | None = None,
-        markets: List[str] | None = None,
     ):
         import os
         from .utils import rq_to_futu_code, futu_path, dt_to_int
@@ -635,7 +635,22 @@ class FutuDataSource(AbstractDataSource):
         earliest: datetime.datetime | None = None
         latest: datetime.datetime | None = None
         root = Path(self._data_dir)
+        target_markets = []
+        if self._markets:
+            target_markets.extend(self._markets)
+
         for p in root.rglob(f"{freq}.csv"):
+            if target_markets:
+                # check if p belongs to target_markets
+                # p structure is usually data_dir/MARKET/SYMBOL/freq.csv
+                # e.g. .../HK/00700/1d.csv
+                # parts[-3] should be market
+                try:
+                    if p.parts[-3] not in target_markets:
+                        continue
+                except IndexError:
+                    pass
+
             try:
                 df = pandas.read_csv(p)
             except Exception:

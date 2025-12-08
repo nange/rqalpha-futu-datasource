@@ -63,8 +63,32 @@ def test_is_suspended():
 def test_available_data_range():
     ds = FutuDataSource(data_dir="tests/data")
     e, latest = ds.available_data_range("1d")
-    assert e == datetime.date(2024, 10, 2)
+    # without specifying markets, defalut to ["SH", "SZ"]
+    assert e == datetime.date(2024, 10, 8)
     assert latest == datetime.date(2024, 11, 29)
+
+
+def test_available_data_range_with_markets():
+    # Only SZ market
+    ds = FutuDataSource(data_dir="tests/data", markets=["SZ"])
+    e, latest = ds.available_data_range("1d")
+    # SZ/000001/1d.csv starts from 2024-10-08, ends 2024-11-25
+    # Let's verify start/end by reading the file or checking the previous test_available_data_range which was global.
+    # The global range 2024-10-01 to 2024-11-29 comes from AAPL (US) and HK probably.
+    # Let's check SZ specific file content to be sure.
+    # Based on previous `head` output:
+    # SZ/000001/1d.csv starts 2024-10-08.
+    assert e == datetime.date(2024, 10, 8)
+    # SZ/000001/1d.csv ends 2024-11-25.
+    assert latest == datetime.date(2024, 11, 29)
+
+    # Check US market
+    ds_us = FutuDataSource(data_dir="tests/data", markets=["US"])
+    e_us, latest_us = ds_us.available_data_range("1d")
+    # US/AAPL/1d.csv starts 2024-10-01.
+    assert e_us == datetime.date(2024, 10, 1)
+    # US/AAPL/1d.csv ends 2024-11-29.
+    assert latest_us == datetime.date(2024, 11, 29)
 
 
 def test_current_snapshot_minute_aggregation():

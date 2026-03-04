@@ -116,13 +116,13 @@ class FutuDataSource(AbstractDataSource):
                     "listed_date": "1990-01-01",
                     "de_listed_date": "2999-12-31",
                 }
-                
+
                 m_enum = MARKET.CN
                 if exch == "XHKG":
                     m_enum = MARKET.HK
                 elif exch in ("XNAS", "XNYS"):
                     m_enum = "US"
-                
+
                 instruments.append(Instrument(dic, market=m_enum))
             return instruments
         # 简化实现：当未指定 id_or_syms 时返回空列表

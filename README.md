@@ -26,7 +26,7 @@ make sync
   - `python -m rqalpha_futu_datasource.download --data-dir data --codes 000001.XSHE,600000.XSHG,00700.XHKG,US.AAPL --periods 1m,3m,5m,1d,1w --start 2024-01-01 --end 2024-12-31`
   - 或使用代码文件：`python -m rqalpha_futu_datasource.download --data-dir data --code-file ./codes.txt`
 - 目录结构：`data/<MARKET>/<SYMBOL>/<period>.csv`，例如：`data/SZ/000001/1d.csv`
-- 可通过环境变量指定目录：`set FUTU_DATA_DIR=...`（Windows）
+- 可通过环境变量指定目录：`set FUTU_DATA_PATH=...`（Windows）
 
 > 注意：
 >
@@ -134,7 +134,7 @@ config = {
             "futu_ds": {
                 "enabled": True,
                 "lib": "rqalpha_futu_datasource.mod_futu_ds",
-                "futu_data_dir": "path/to/futu/data",
+                "futu_data_path": "path/to/futu/data",
             }
         },
    }
@@ -153,7 +153,7 @@ config = {
 3. 在环境变量中指定：
 
    ```bash
-   export FUTU_DATA_DIR=path/to/futu/data
+   export FUTU_DATA_PATH=path/to/futu/data
    ```
 
 优先级按此顺序：模块配置 > base配置 > 环境变量。

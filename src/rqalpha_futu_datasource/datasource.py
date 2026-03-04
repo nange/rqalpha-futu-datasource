@@ -9,6 +9,7 @@ from typing import Optional, List, Dict, Tuple, Iterable, Sequence
 import datetime
 
 from rqalpha.interface import AbstractDataSource, Instrument, TRADING_CALENDAR_TYPE
+from rqalpha.const import MARKET
 from .constants import SUPPORTED_FREQUENCIES
 from rqalpha.model import BarObject, TickObject
 
@@ -33,7 +34,7 @@ class FutuDataSource(AbstractDataSource):
         from .utils import rq_to_futu_code, futu_path, dt_to_int
 
         self._data_dir = (
-            data_dir or os.getenv("FUTU_DATA_DIR") or os.path.join(os.getcwd(), "data")
+            data_dir or os.getenv("FUTU_DATA_PATH") or os.path.join(os.getcwd(), "data")
         )
         self._rq_to_futu_code = rq_to_futu_code
         self._futu_path = futu_path
@@ -115,7 +116,14 @@ class FutuDataSource(AbstractDataSource):
                     "listed_date": "1990-01-01",
                     "de_listed_date": "2999-12-31",
                 }
-                instruments.append(Instrument(dic))
+                
+                m_enum = MARKET.CN
+                if exch == "XHKG":
+                    m_enum = MARKET.HK
+                elif exch in ("XNAS", "XNYS"):
+                    m_enum = "US"
+                
+                instruments.append(Instrument(dic, market=m_enum))
             return instruments
         # 简化实现：当未指定 id_or_syms 时返回空列表
         return instruments
@@ -215,7 +223,10 @@ class FutuDataSource(AbstractDataSource):
         self,
     ) -> Dict[TRADING_CALENDAR_TYPE, pandas.DatetimeIndex]:
         cal = self._collect_trading_days()
-        return {TRADING_CALENDAR_TYPE.EXCHANGE: cal}
+        return {TRADING_CALENDAR_TYPE.CN_STOCK: cal}
+
+    def get_exchange_rate(self, order_book_id: str, date: datetime.date) -> float:
+        return 1.0
 
     def get_trading_calendar(self) -> pandas.DatetimeIndex:
         return self._collect_trading_days()
@@ -316,9 +327,9 @@ class FutuDataSource(AbstractDataSource):
     def history_bars(
         self,
         instrument: Instrument,
-        bar_count: int,
+        bar_count: int | None,
         frequency: str,
-        fields: str,
+        fields: str | List[str],
         dt: datetime.datetime,
         skip_suspended: bool = True,
         include_now: bool = False,
@@ -417,7 +428,8 @@ class FutuDataSource(AbstractDataSource):
             data = df.loc[mask]
             if skip_suspended:
                 data = data[data["volume"] > 0]
-        data = data.tail(bar_count)
+        if bar_count is not None:
+            data = data.tail(bar_count)
         if isinstance(fields, str):
             fields_list = [fields]
         else:

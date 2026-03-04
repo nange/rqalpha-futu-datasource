@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 
-dependencies = ["futu-api>=9.4.5408", "rqalpha>=5.6.4.1"]
+dependencies = ["futu-api>=9.4.5408", "rqalpha>=6.1.2"]
 
 [build-system]
 requires = ["hatchling"]

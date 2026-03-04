@@ -120,7 +120,7 @@ def parse_args(argv: List[str] | None = None):
     parser.add_argument(
         "--data-dir",
         type=str,
-        default=os.getenv("FUTU_DATA_DIR", os.path.join(os.getcwd(), "data")),
+        default=os.getenv("FUTU_DATA_PATH", os.path.join(os.getcwd(), "data")),
     )
     parser.add_argument("--codes", type=str, default="")
     parser.add_argument("--code-file", type=str, default="")

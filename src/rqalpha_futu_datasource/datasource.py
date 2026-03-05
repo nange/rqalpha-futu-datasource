@@ -100,7 +100,7 @@ class FutuDataSource(AbstractDataSource):
                 minute_path = self._futu_path(self._data_dir, market, symbol, "1m")
                 if not (os.path.exists(daily_path) or os.path.exists(minute_path)):
                     continue
-                
+
                 board_type = "MainBoard"  # 主板
                 if code.startswith("68"):
                     board_type = "KSH"  # 科创板

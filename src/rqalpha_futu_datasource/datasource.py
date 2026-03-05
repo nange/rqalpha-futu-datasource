@@ -172,20 +172,25 @@ class FutuDataSource(AbstractDataSource):
             df = pandas.read_csv(path)
         except Exception:
             return
-        cols = [c.lower() for c in df.columns]
-        has_code = any(c in ("code", "symbol") for c in cols)
-        has_lot = any(c in ("lot", "lot_size", "board_lot") for c in cols)
+        cols_map = {c.lower(): c for c in df.columns}
+
+        has_code = any(c in cols_map for c in ("code", "symbol"))
+        has_lot = any(c in cols_map for c in ("lot", "lot_size", "board_lot"))
+
         if not (has_code and has_lot):
             return
-        code_col = (
+
+        code_col_name = (
             "code"
-            if "code" in df.columns
-            else ("symbol" if "symbol" in df.columns else None)
+            if "code" in cols_map
+            else ("symbol" if "symbol" in cols_map else None)
         )
+        code_col = cols_map.get(code_col_name)
+
         lot_col = None
         for c in ("lot", "lot_size", "board_lot"):
-            if c in df.columns:
-                lot_col = c
+            if c in cols_map:
+                lot_col = cols_map[c]
                 break
         if not code_col or not lot_col:
             return

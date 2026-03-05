@@ -100,16 +100,34 @@ class FutuDataSource(AbstractDataSource):
                 minute_path = self._futu_path(self._data_dir, market, symbol, "1m")
                 if not (os.path.exists(daily_path) or os.path.exists(minute_path)):
                     continue
-                board_type = "MainBoard"
+                
+                board_type = "MainBoard"  # 主板
                 if code.startswith("68"):
-                    board_type = "KSH"
+                    board_type = "KSH"  # 科创板
                 elif code.startswith("30"):
-                    board_type = "GEM"
+                    board_type = "GEM"  # 创业板
+
+                round_lot = self._get_round_lot(exch, code)
+                min_order_quantity = round_lot
+                order_step_size = round_lot
+
+                if exch in ("XSHE", "XSHG"):
+                    # A股逻辑
+                    if board_type == "KSH":
+                        min_order_quantity = 200
+                        order_step_size = 1
+                elif exch in ("XNAS", "XNYS"):
+                    # 美股逻辑
+                    round_lot = 1
+                    min_order_quantity = 1
+                    order_step_size = 1
 
                 dic = {
                     "order_book_id": f"{code}.{exch}",
                     "symbol": code,
-                    "round_lot": self._get_round_lot(exch, code),
+                    "round_lot": round_lot,
+                    "min_order_quantity": min_order_quantity,
+                    "order_step_size": order_step_size,
                     "exchange": exch,
                     "type": INSTRUMENT_TYPE.CS.name,
                     "board_type": board_type,

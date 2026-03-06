@@ -13,6 +13,9 @@ def handle_bar(context, bar_dict):
     if context.order_count < 3:
         order = order_shares("000001.XSHE", 100)
         print(f"Order placed in handle_bar: {order}")
+        assert order is not None
+        assert order.order_id
+        assert order.trading_datetime.date() == context.now.date()
         context.order_count += 1
     now = context.now
     assert now.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 15:00:00"
@@ -79,6 +82,9 @@ def handle_bar_1m(context, bar_dict):
     if context.order_count < 3:
         order = order_shares("000001.XSHE", 100)
         print(f"Order placed in handle_bar_1m: {order}")
+        assert order is not None
+        assert order.order_id
+        assert order.trading_datetime.date() == context.now.date()
         context.order_count += 1
 
     daily_2 = history_bars(

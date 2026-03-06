@@ -1,5 +1,6 @@
 import argparse
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple
 
@@ -18,6 +19,18 @@ PERIOD_MAP = {
     "1w": ft.KLType.K_WEEK,
     "1mo": ft.KLType.K_MON,
 }
+
+
+def validate_time(time_str: str | None):
+    if not time_str:
+        return
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            datetime.strptime(time_str, fmt)
+            return
+        except ValueError:
+            continue
+    raise ValueError(f"Invalid time format or value: {time_str}")
 
 
 def parse_codes(raw: List[str]) -> List[Tuple[str, str]]:
@@ -136,6 +149,7 @@ def parse_args(argv: List[str] | None = None):
 
 def main(argv: List[str] | None = None):
     args = parse_args(argv)
+    print(args)
     codes_raw: List[str] = []
     if args.codes:
         codes_raw.extend([x for x in args.codes.split(",") if x])
@@ -143,6 +157,8 @@ def main(argv: List[str] | None = None):
         with open(args.code_file, "r", encoding="utf-8") as f:
             codes_raw.extend([line.strip() for line in f if line.strip()])
     codes = parse_codes(codes_raw)
+    validate_time(args.start)
+    validate_time(args.end)
     periods = [p.strip() for p in args.periods.split(",") if p.strip()]
     for p in periods:
         if p not in PERIOD_MAP:

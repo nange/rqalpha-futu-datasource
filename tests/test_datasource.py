@@ -324,8 +324,7 @@ def test_get_instruments_passes_correct_params():
             args, _ = mock_ins.call_args
             dic = args[0]
             assert dic["board_type"] == "KSH"
-            assert dic["min_order_quantity"] == 200
-            assert dic["order_step_size"] == 1
+            assert dic["round_lot"] == 200
 
 
 def test_get_instruments_details():
@@ -375,8 +374,11 @@ def test_get_instruments_details():
         assert ins_us.order_step_size == 1
 
         # Test KSH special logic
-        ins_ksh = ds.get_instruments(["688001.XSHG"])[0]
+        ins_ksh = ds.get_instruments(["688306.XSHG"])[0]
         assert ins_ksh.board_type == "KSH"
+        # 对于科创板，rqalpha 的 Instrument.round_lot 属性会强制返回 1
+        # 但 min_order_quantity 会使用传入的 round_lot 值（200）
+        assert ins_ksh.round_lot == 1
         assert ins_ksh.min_order_quantity == 200
         assert ins_ksh.order_step_size == 1
 

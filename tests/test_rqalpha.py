@@ -1,14 +1,19 @@
 import os
 from rqalpha import run_func
-from rqalpha.api import subscribe, history_bars, current_snapshot
+from rqalpha.api import subscribe, history_bars, current_snapshot, order_shares
 
 
 def init(context):
     context.codes = ["000001.XSHE", "600000.XSHG", "00700.XHKG", "AAPL.XNAS"]
+    context.order_count = 0
     subscribe(context.codes)
 
 
 def handle_bar(context, bar_dict):
+    if context.order_count < 3:
+        order = order_shares("000001.XSHE", 100)
+        print(f"Order placed in handle_bar: {order}")
+        context.order_count += 1
     now = context.now
     assert now.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 15:00:00"
 
@@ -71,6 +76,11 @@ def handle_bar(context, bar_dict):
 
 
 def handle_bar_1m(context, bar_dict):
+    if context.order_count < 3:
+        order = order_shares("000001.XSHE", 100)
+        print(f"Order placed in handle_bar_1m: {order}")
+        context.order_count += 1
+
     daily_2 = history_bars(
         "000001.XSHE",
         2,
@@ -151,22 +161,6 @@ def handle_bar_1m(context, bar_dict):
     assert float(weekly_4[1]["close"]) == 11.442
     assert float(weekly_4[2]["close"]) == 11.112
     assert float(weekly_4[3]["close"]) == 10.832
-
-    # monthly_4 = history_bars(
-    #     "000001.XSHE",
-    #     4,
-    #     "1mo",
-    #     include_now=True,
-    # )
-    # assert len(monthly_4) == 4
-    # assert monthly_4[0]["datetime"] == 20240801000000
-    # assert monthly_4[1]["datetime"] == 20240901000000
-    # assert monthly_4[2]["datetime"] == 20241001000000
-    # assert monthly_4[3]["datetime"] == 20241101000000
-    # assert float(monthly_4[0]["close"]) == 9.316
-    # assert float(monthly_4[1]["close"]) == 11.366
-    # assert float(monthly_4[2]["close"]) == 10.782
-    # assert float(monthly_4[3]["close"]) == 10.782
 
     obj = bar_dict["000001.XSHE"]
     assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 09:31:00"

@@ -54,7 +54,7 @@ class FutuDSMod(AbstractMod):
         market = None
         if base_config:
             market = getattr(base_config, "market", None)
-        
+
         if not market:
             market = "cn"
 

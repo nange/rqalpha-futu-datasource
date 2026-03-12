@@ -53,7 +53,7 @@ class FutuDataSource(AbstractDataSource):
             markets = [market]
         else:
             markets = market
-        
+
         resolved_markets = []
         for m in markets:
             lower_m = m.lower()
@@ -262,7 +262,7 @@ class FutuDataSource(AbstractDataSource):
         # DataSource 应该尽可能返回所有它能支持的日历，而不受限于当前配置的 market 参数
         # 因为 RQAlpha 可能会查询不同类型的日历
         # 这里我们尝试加载所有已知的市场日历，只要本地数据存在
-        
+
         # 定义所有可能的市场映射
         all_market_map = {
             TRADING_CALENDAR_TYPE.CN_STOCK: ["SH", "SZ"],
@@ -279,6 +279,7 @@ class FutuDataSource(AbstractDataSource):
             except Exception as e:
                 # 忽略收集过程中的错误（例如目录不存在）
                 from rqalpha.utils.logger import system_log
+
                 system_log.warning(
                     f"FutuDataSource: failed to collect trading days for {cal_type} ({market_codes}): {e}"
                 )

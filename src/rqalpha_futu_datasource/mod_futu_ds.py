@@ -54,23 +54,16 @@ class FutuDSMod(AbstractMod):
         market = None
         if base_config:
             market = getattr(base_config, "market", None)
-            if not market:
-                market = "cn"
-
-        markets = []
-        if market == "cn":
-            markets = ["SH", "SZ"]
-        elif market == "hk":
-            markets = ["HK"]
-        elif market == "us":
-            markets = ["US"]
+        
+        if not market:
+            market = "cn"
 
         env.set_data_source(
             FutuDataSource(
                 data_dir=data_dir,
                 hk_lot_map_path=hk_lot_map_path,
                 hk_lot_map=hk_lot_map,
-                markets=markets,
+                market=market,
             )
         )
 

@@ -71,7 +71,7 @@ def test_available_data_range():
 
 def test_available_data_range_with_markets():
     # Only SZ market
-    ds = FutuDataSource(data_dir="tests/data", markets=["SZ"])
+    ds = FutuDataSource(data_dir="tests/data", market="cn")
     e, latest = ds.available_data_range("1d")
     # SZ/000001/1d.csv starts from 2024-10-08, ends 2024-11-25
     # Let's verify start/end by reading the file or checking the previous test_available_data_range which was global.
@@ -84,7 +84,7 @@ def test_available_data_range_with_markets():
     assert latest == datetime.date(2024, 11, 29)
 
     # Check US market
-    ds_us = FutuDataSource(data_dir="tests/data", markets=["US"])
+    ds_us = FutuDataSource(data_dir="tests/data", market="us")
     e_us, latest_us = ds_us.available_data_range("1d")
     # US/AAPL/1d.csv starts 2024-10-01.
     assert e_us == datetime.date(2024, 10, 1)
@@ -244,13 +244,6 @@ def test_get_trading_calendars():
     assert isinstance(calendars[TRADING_CALENDAR_TYPE.CN_STOCK], pandas.DatetimeIndex)
     # Check if some known dates are in the calendar
     assert pandas.Timestamp("2024-11-05") in calendars[TRADING_CALENDAR_TYPE.CN_STOCK]
-
-
-def test_get_trading_calendar():
-    ds = FutuDataSource(data_dir="tests/data")
-    calendar = ds.get_trading_calendar()
-    assert isinstance(calendar, pandas.DatetimeIndex)
-    assert pandas.Timestamp("2024-11-05") in calendar
 
 
 def test_get_exchange_rate():

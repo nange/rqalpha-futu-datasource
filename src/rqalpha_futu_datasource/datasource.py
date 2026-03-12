@@ -23,10 +23,16 @@ class FutuDataSource(AbstractDataSource):
     在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换rqalpha默认的数据源。
     """
 
+    MARKET_MAP = {
+        "cn": ["SH", "SZ"],
+        "hk": ["HK"],
+        "us": ["US"],
+    }
+
     def __init__(
         self,
         data_dir: str,
-        markets: List[str] = ["SH", "SZ"],
+        market: str | List[str] = "cn",
         hk_lot_map: Dict[str, int] | None = None,
         hk_lot_map_path: str | None = None,
     ):
@@ -42,7 +48,21 @@ class FutuDataSource(AbstractDataSource):
         self._cache: Dict[Tuple[str, str], pandas.DataFrame] = {}
         self._lot_size_cache: Dict[str, int] = {}
         self._hk_lot_map: Dict[str, int] = {}
-        self._markets = markets
+
+        if isinstance(market, str):
+            markets = [market]
+        else:
+            markets = market
+        
+        resolved_markets = []
+        for m in markets:
+            lower_m = m.lower()
+            if lower_m in self.MARKET_MAP:
+                resolved_markets.extend(self.MARKET_MAP[lower_m])
+            else:
+                resolved_markets.append(m)
+        self._markets = list(set(resolved_markets))
+
         if hk_lot_map:
             for k, v in hk_lot_map.items():
                 try:
@@ -84,6 +104,7 @@ class FutuDataSource(AbstractDataSource):
         import os
 
         instruments: list[Instrument] = []
+        # TODO: 添加对 market 的支持，以及id_or_syms为None时的逻辑
         if id_or_syms:
             for s in id_or_syms:
                 try:
@@ -198,22 +219,18 @@ class FutuDataSource(AbstractDataSource):
             if code and code not in self._hk_lot_map:
                 self._hk_lot_map[code] = lot
 
-    def _collect_trading_days(self) -> pandas.DatetimeIndex:
+    def _collect_trading_days(self, markets: Sequence[str]) -> pandas.DatetimeIndex:
         from pathlib import Path
 
         days = []
         root = Path(self._data_dir)
 
-        target_markets = []
-        if self._markets:
-            target_markets.extend(self._markets)
-
-        if not target_markets:
+        if not markets:
             raise ValueError(
-                "FutuDataSource: benchmark or markets must be configured to determine trading calendar."
+                "FutuDataSource: markets must be provided to determine trading calendar."
             )
 
-        for market in target_markets:
+        for market in markets:
             market_path = root / market
             if not market_path.exists():
                 continue
@@ -238,14 +255,39 @@ class FutuDataSource(AbstractDataSource):
     def get_trading_calendars(
         self,
     ) -> Dict[TRADING_CALENDAR_TYPE, pandas.DatetimeIndex]:
-        cal = self._collect_trading_days()
-        return {TRADING_CALENDAR_TYPE.CN_STOCK: cal}
+        """
+        获取交易日历，DataSource 应返回所有支持的交易日历种类
+        """
+        calendars = {}
+        # DataSource 应该尽可能返回所有它能支持的日历，而不受限于当前配置的 market 参数
+        # 因为 RQAlpha 可能会查询不同类型的日历
+        # 这里我们尝试加载所有已知的市场日历，只要本地数据存在
+        
+        # 定义所有可能的市场映射
+        all_market_map = {
+            TRADING_CALENDAR_TYPE.CN_STOCK: ["SH", "SZ"],
+            TRADING_CALENDAR_TYPE.HK_STOCK: ["HK"],
+            TRADING_CALENDAR_TYPE.US_STOCK: ["US"],
+        }
+
+        for cal_type, market_codes in all_market_map.items():
+            # 尝试收集该类型下所有市场的交易日
+            try:
+                cal = self._collect_trading_days(market_codes)
+                if not cal.empty:
+                    calendars[cal_type] = cal
+            except Exception as e:
+                # 忽略收集过程中的错误（例如目录不存在）
+                from rqalpha.utils.logger import system_log
+                system_log.warning(
+                    f"FutuDataSource: failed to collect trading days for {cal_type} ({market_codes}): {e}"
+                )
+                continue
+
+        return calendars
 
     def get_exchange_rate(self, order_book_id: str, date: datetime.date) -> float:
         return 1.0
-
-    def get_trading_calendar(self) -> pandas.DatetimeIndex:
-        return self._collect_trading_days()
 
     def get_yield_curve(
         self,

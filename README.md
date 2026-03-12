@@ -101,7 +101,7 @@ code,lot_size
 
 #### 3. 配置交易日历范围（Markets）
 
-`rqalpha-futu-datasource` 需要知道在哪个市场中查找交易日历数据。这可以通过 `rqalpha` 的 `base` 配置中的 `market` 参数来确定：
+`rqalpha-futu-datasource` 需要知道在哪个市场中查找交易日历数据，可用数据时间范围以及加载那个市场的`Instrument`信息等，这可以通过 `rqalpha` 的 `base` 配置中的 `market` 参数来确定：
 
 ```python
 config = {

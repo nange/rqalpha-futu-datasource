@@ -19,7 +19,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 
-dependencies = ["futu-api>=9.4.5408", "rqalpha>=6.1.2"]
+dependencies = [
+    "futu-api>=9.4.5408",
+    "rqalpha @ git+https://github.com/nange/rqalpha.git",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -27,6 +30,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rqalpha_futu_datasource"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [dependency-groups]
 dev = ["ruff>=0.14.3", "pytest>=9.0.0"]

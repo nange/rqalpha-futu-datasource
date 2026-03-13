@@ -61,7 +61,7 @@ class FutuDataSource(AbstractDataSource):
                 resolved_markets.extend(self.MARKET_MAP[lower_m])
             else:
                 resolved_markets.append(m)
-        self._markets = list(set(resolved_markets))
+        self._markets = sorted(list(set(resolved_markets)))
 
         if hk_lot_map:
             for k, v in hk_lot_map.items():
@@ -90,6 +90,42 @@ class FutuDataSource(AbstractDataSource):
         df.reset_index(drop=True, inplace=True)
         return df
 
+    def _create_instrument_obj(self, code: str, exch: str) -> Instrument:
+        from rqalpha.const import INSTRUMENT_TYPE
+
+        board_type = "MainBoard"
+        if code.startswith("68"):
+            board_type = "KSH"
+        elif code.startswith("30"):
+            board_type = "GEM"
+
+        round_lot = self._get_round_lot(exch, code)
+
+        if exch in ("XSHE", "XSHG"):
+            if board_type == "KSH":
+                round_lot = 200
+        elif exch in ("XNAS", "XNYS"):
+            round_lot = 1
+
+        dic = {
+            "order_book_id": f"{code}.{exch}",
+            "symbol": code,
+            "round_lot": round_lot,
+            "exchange": exch,
+            "type": INSTRUMENT_TYPE.CS.name,
+            "board_type": board_type,
+            "listed_date": "1990-01-01",
+            "de_listed_date": "2999-12-31",
+        }
+
+        m_enum = MARKET.CN
+        if exch == "XHKG":
+            m_enum = MARKET.HK
+        elif exch in ("XNAS", "XNYS"):
+            m_enum = "US"
+
+        return Instrument(dic, market=m_enum)
+
     def get_instruments(
         self,
         id_or_syms: Iterable[str] | None = None,
@@ -100,11 +136,11 @@ class FutuDataSource(AbstractDataSource):
         可指定 order_book_id 或 symbol 或 instrument type，id_or_syms 优先级高于 types，
         id_or_syms 和 types 均为 None 时返回全部 instruments
         """
-        from rqalpha.const import INSTRUMENT_TYPE
         import os
+        from pathlib import Path
 
         instruments: list[Instrument] = []
-        # TODO: 添加对 market 的支持，以及id_or_syms为None时的逻辑
+
         if id_or_syms:
             for s in id_or_syms:
                 try:
@@ -115,49 +151,57 @@ class FutuDataSource(AbstractDataSource):
                 if exch not in ("XSHE", "XSHG", "XHKG", "XNAS", "XNYS"):
                     # 默认按 A 股处理
                     exch = "XSHE"
-                market, symbol = self._rq_to_futu_code(f"{code}.{exch}")
+
+                try:
+                    market, symbol = self._rq_to_futu_code(f"{code}.{exch}")
+                except ValueError:
+                    continue
+
+                # 过滤不在 self._markets 中的 market
+                if market not in self._markets:
+                    continue
+
                 # 若对应数据文件不存在，则跳过
                 daily_path = self._futu_path(self._data_dir, market, symbol, "1d")
                 minute_path = self._futu_path(self._data_dir, market, symbol, "1m")
                 if not (os.path.exists(daily_path) or os.path.exists(minute_path)):
                     continue
 
-                board_type = "MainBoard"  # 主板
-                if code.startswith("68"):
-                    board_type = "KSH"  # 科创板
-                elif code.startswith("30"):
-                    board_type = "GEM"  # 创业板
-
-                round_lot = self._get_round_lot(exch, code)
-
-                if exch in ("XSHE", "XSHG"):
-                    # A股逻辑
-                    if board_type == "KSH":
-                        round_lot = 200
-                elif exch in ("XNAS", "XNYS"):
-                    # 美股逻辑
-                    round_lot = 1
-
-                dic = {
-                    "order_book_id": f"{code}.{exch}",
-                    "symbol": code,
-                    "round_lot": round_lot,
-                    "exchange": exch,
-                    "type": INSTRUMENT_TYPE.CS.name,
-                    "board_type": board_type,
-                    "listed_date": "1990-01-01",
-                    "de_listed_date": "2999-12-31",
-                }
-
-                m_enum = MARKET.CN
-                if exch == "XHKG":
-                    m_enum = MARKET.HK
-                elif exch in ("XNAS", "XNYS"):
-                    m_enum = "US"
-
-                instruments.append(Instrument(dic, market=m_enum))
+                instruments.append(self._create_instrument_obj(code, exch))
             return instruments
-        # 简化实现：当未指定 id_or_syms 时返回空列表
+
+        # 当未指定 id_or_syms 时，加载指定 market 下的所有数据
+        root = Path(self._data_dir)
+        for market in self._markets:
+            market_path = root / market
+            if not market_path.exists():
+                continue
+
+            # 推断 exchange
+            if market == "SH":
+                exch = "XSHG"
+            elif market == "SZ":
+                exch = "XSHE"
+            elif market == "HK":
+                exch = "XHKG"
+            elif market == "US":
+                exch = "XNAS"  # 默认为 XNAS
+            else:
+                continue
+
+            for symbol_path in market_path.iterdir():
+                if not symbol_path.is_dir():
+                    continue
+                symbol = symbol_path.name
+
+                daily_path = symbol_path / "1d.csv"
+                minute_path = symbol_path / "1m.csv"
+
+                if not (daily_path.exists() or minute_path.exists()):
+                    continue
+
+                instruments.append(self._create_instrument_obj(symbol, exch))
+
         return instruments
 
     def _get_round_lot(self, exch: str, code: str) -> int:

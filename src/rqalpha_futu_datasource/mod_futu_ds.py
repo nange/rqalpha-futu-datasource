@@ -49,21 +49,21 @@ class FutuDSMod(AbstractMod):
         if not data_dir:
             data_dir = os.getenv("FUTU_DATA_PATH")
 
+        markets = None
         # Use rqalpha base config market to determine markets
         base_config = getattr(env.config, "base", None)
-        market = None
         if base_config:
-            market = getattr(base_config, "market", None)
+            markets = getattr(base_config, "market", None) or base_config.get("market")
 
-        if not market:
-            market = "cn"
+        if not markets:
+            markets = "cn"
 
         env.set_data_source(
             FutuDataSource(
                 data_dir=data_dir,
                 hk_lot_map_path=hk_lot_map_path,
                 hk_lot_map=hk_lot_map,
-                market=market,
+                market=markets,
             )
         )
 

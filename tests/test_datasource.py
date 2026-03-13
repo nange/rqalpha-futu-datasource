@@ -287,7 +287,10 @@ def test_get_instruments_no_args():
     ds = FutuDataSource(data_dir="tests/data")
     instruments = ds.get_instruments()
     assert isinstance(instruments, list)
-    assert len(instruments) == 0
+    # With default market='cn', it should return SH/SZ instruments
+    assert len(instruments) > 0
+    found_obids = {i.order_book_id for i in instruments}
+    assert "000001.XSHE" in found_obids
 
 
 def test_hk_lot_map_config():
@@ -324,7 +327,9 @@ def test_get_instruments_details():
     with patch("os.path.exists") as mock_exists:
         mock_exists.return_value = True
         ds = FutuDataSource(
-            data_dir="tests/data", hk_lot_map_path="tests/data/hk_lot_map.csv"
+            data_dir="tests/data",
+            hk_lot_map_path="tests/data/hk_lot_map.csv",
+            market=["cn", "hk", "us"],
         )
 
         # Test A-Share (SHE)
@@ -382,3 +387,60 @@ def test_get_instruments_file_not_found():
         ds = FutuDataSource(data_dir="dummy_dir")
         instruments = ds.get_instruments(["000001.XSHE"])
         assert len(instruments) == 0
+
+
+def test_get_instruments_no_args_returns_all():
+    # tests/data has HK, SH, SZ, US data
+    ds = FutuDataSource(data_dir="tests/data", market=["cn", "hk", "us"])
+    instruments = ds.get_instruments()
+
+    assert len(instruments) > 0
+    # Expected order book ids based on folder structure
+    expected_obids = {"00700.XHKG", "600000.XSHG", "000001.XSHE", "AAPL.XNAS"}
+
+    found_obids = {i.order_book_id for i in instruments}
+
+    # Check if all expected are found
+    for obid in expected_obids:
+        assert obid in found_obids, f"{obid} not found in {found_obids}"
+
+
+def test_get_instruments_with_market_filter_init():
+    # Initialize with only 'cn' market
+    ds = FutuDataSource(data_dir="tests/data", market="cn")
+    instruments = ds.get_instruments()
+
+    found_obids = {i.order_book_id for i in instruments}
+
+    # Should contain SH/SZ
+    assert "000001.XSHE" in found_obids
+    assert "600000.XSHG" in found_obids
+
+    # Should NOT contain HK or US
+    assert "00700.XHKG" not in found_obids
+    assert "AAPL.XNAS" not in found_obids
+
+
+def test_get_instruments_id_or_syms_with_market_check():
+    # Initialize with only 'cn' market
+    ds = FutuDataSource(data_dir="tests/data", market="cn")
+
+    # Request mix of CN, HK, US
+    req_list = ["000001.XSHE", "00700.XHKG", "AAPL.XNAS"]
+    instruments = ds.get_instruments(req_list)
+
+    found_obids = {i.order_book_id for i in instruments}
+
+    assert "000001.XSHE" in found_obids
+    assert "00700.XHKG" not in found_obids
+    assert "AAPL.XNAS" not in found_obids
+
+
+def test_get_instruments_us_market_default_exchange():
+    # Initialize with 'us' market
+    ds = FutuDataSource(data_dir="tests/data", market="us")
+    instruments = ds.get_instruments()
+
+    found_obids = {i.order_book_id for i in instruments}
+    # My logic defaults US market symbols to XNAS
+    assert "AAPL.XNAS" in found_obids

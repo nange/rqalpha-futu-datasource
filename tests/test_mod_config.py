@@ -16,13 +16,20 @@ def env():
 
 @pytest.fixture
 def mod_config():
-    return MagicMock()
+    m = MagicMock()
+    # Explicitly set attributes to None to avoid MagicMock creating mocks
+    m.futu_data_path = None
+    m.hk_lot_map_path = None
+    m.hk_lot_map = None
+    # Configure .get() to return None by default
+    m.get.return_value = None
+    return m
 
 
 @pytest.mark.parametrize(
     "market, expected_markets",
     [
-        ("cn", ["SZ", "SH"]),
+        ("cn", ["SH", "SZ"]),
         ("hk", ["HK"]),
         ("us", ["US"]),
     ],
@@ -52,4 +59,21 @@ def test_start_up_default(mod, env, mod_config):
     ds = args[0]
     # Should default to cn -> SH, SZ
     assert isinstance(ds, FutuDataSource)
-    assert ds._markets == ["SZ", "SH"]
+    assert ds._markets == ["SH", "SZ"]
+
+
+def test_ignore_mod_config_markets(mod, env, mod_config):
+    # Set mod_config.markets to something else
+    mod_config.markets = "us"
+    mod_config.get.side_effect = lambda k: "us" if k == "markets" else None
+
+    # Set base.market to 'hk'
+    env.config.base.market = "hk"
+
+    mod.start_up(env, mod_config)
+
+    args, kwargs = env.set_data_source.call_args
+    ds = args[0]
+    # Should respect base.market ('hk'), ignoring mod_config.markets ('us')
+    assert isinstance(ds, FutuDataSource)
+    assert ds._markets == ["HK"]

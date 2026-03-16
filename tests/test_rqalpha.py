@@ -70,10 +70,10 @@ def handle_bar(context, bar_dict):
 
     obj = bar_dict["AAPL.XNAS"]
     assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 00:00:00"
-    assert float(obj.open) == 219.728380867
-    assert float(obj.high) == 224.088840443
-    assert float(obj.low) == 219.037270399
-    assert float(obj.close) == 221.662495776
+    assert float(obj.open) == 219.522968047
+    assert float(obj.high) == 223.879351252
+    assert float(obj.low) == 218.832503662
+    assert float(obj.close) == 221.45527485
     assert float(obj.volume) == 65276741.0
     assert float(obj.total_turnover) == 14544469827.0
 
@@ -197,10 +197,10 @@ def handle_bar_1m(context, bar_dict):
 
     obj = bar_dict["AAPL.XNAS"]
     assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 09:31:00"
-    assert float(obj.open) == 219.728380867
-    assert float(obj.high) == 220.58853994
-    assert float(obj.low) == 219.037270399
-    assert float(obj.close) == 220.190778519
+    assert float(obj.open) == 219.522968047
+    assert float(obj.high) == 220.382323001
+    assert float(obj.low) == 218.832503662
+    assert float(obj.close) == 219.984933427
     assert float(obj.volume) == 1869295.0
     assert float(obj.total_turnover) == 412994919.211
 

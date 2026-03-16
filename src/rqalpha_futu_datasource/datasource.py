@@ -9,7 +9,7 @@ from typing import Optional, List, Dict, Tuple, Iterable, Sequence
 import datetime
 
 from rqalpha.interface import AbstractDataSource, Instrument, TRADING_CALENDAR_TYPE
-from rqalpha.const import MARKET
+from rqalpha.const import MARKET, EXCHANGE
 from .constants import SUPPORTED_FREQUENCIES
 from rqalpha.model import BarObject, TickObject
 
@@ -100,10 +100,10 @@ class FutuDataSource(AbstractDataSource):
 
         round_lot = self._get_round_lot(exch, code)
 
-        if exch in ("XSHE", "XSHG"):
+        if exch in (EXCHANGE.XSHE, EXCHANGE.XSHG):
             if board_type == "KSH":
                 round_lot = 200
-        elif exch in ("XNAS", "XNYS"):
+        elif exch in (EXCHANGE.XNAS, EXCHANGE.XNYS):
             round_lot = 1
 
         dic = {
@@ -118,10 +118,10 @@ class FutuDataSource(AbstractDataSource):
         }
 
         m_enum = MARKET.CN
-        if exch == "XHKG":
+        if exch == EXCHANGE.XHKG:
             m_enum = MARKET.HK
-        elif exch in ("XNAS", "XNYS"):
-            m_enum = "US"
+        elif exch in (EXCHANGE.XNAS, EXCHANGE.XNYS):
+            m_enum = MARKET.US
 
         return Instrument(dic, market=m_enum)
 
@@ -134,6 +134,8 @@ class FutuDataSource(AbstractDataSource):
         获取 instrument，
         可指定 order_book_id 或 symbol 或 instrument type，id_or_syms 优先级高于 types，
         id_or_syms 和 types 均为 None 时返回全部 instruments
+
+        注意: `types`为需要查询合约类型。目前只支持股票类型，不支持期货等类型。因此这个值目前无效，不需要指定。
         """
         import os
         from pathlib import Path
@@ -147,19 +149,19 @@ class FutuDataSource(AbstractDataSource):
                 except Exception:
                     code, exch = s, ""
                 exch = exch.upper()
-                if exch not in ("XSHE", "XSHG", "XHKG", "XNAS", "XNYS"):
+                if exch not in (EXCHANGE.XSHE, EXCHANGE.XSHG, EXCHANGE.XHKG, EXCHANGE.XNAS, EXCHANGE.XNYS):
                     # 默认按 A 股处理
-                    exch = "XSHE"
+                    exch = EXCHANGE.XSHE
 
                 # 检查 exch 是否在 self._markets 允许的范围内
                 is_allowed = False
-                if exch == "XSHG" and "SH" in self._markets:
+                if exch == EXCHANGE.XSHG and "SH" in self._markets:
                     is_allowed = True
-                elif exch == "XSHE" and "SZ" in self._markets:
+                elif exch == EXCHANGE.XSHE and "SZ" in self._markets:
                     is_allowed = True
-                elif exch == "XHKG" and "HK" in self._markets:
+                elif exch == EXCHANGE.XHKG and "HK" in self._markets:
                     is_allowed = True
-                elif exch in ("XNAS", "XNYS") and "US" in self._markets:
+                elif exch in (EXCHANGE.XNAS, EXCHANGE.XNYS) and "US" in self._markets:
                     is_allowed = True
 
                 if not is_allowed:
@@ -192,13 +194,13 @@ class FutuDataSource(AbstractDataSource):
             # 重新实现 market 过滤逻辑
             # self._markets 包含的是 SH, SZ, HK, US
             is_target = False
-            if exch == "XSHG" and "SH" in self._markets:
+            if exch == EXCHANGE.XSHG and "SH" in self._markets:
                 is_target = True
-            elif exch == "XSHE" and "SZ" in self._markets:
+            elif exch == EXCHANGE.XSHE and "SZ" in self._markets:
                 is_target = True
-            elif exch == "XHKG" and "HK" in self._markets:
+            elif exch == EXCHANGE.XHKG and "HK" in self._markets:
                 is_target = True
-            elif exch in ("XNAS", "XNYS") and "US" in self._markets:
+            elif exch in (EXCHANGE.XNAS, EXCHANGE.XNYS) and "US" in self._markets:
                 is_target = True
 
             if not is_target:
@@ -219,13 +221,13 @@ class FutuDataSource(AbstractDataSource):
         val = self._lot_size_cache.get(key)
         if val:
             return val
-        if exch in ("XSHE", "XSHG"):
+        if exch in (EXCHANGE.XSHE, EXCHANGE.XSHG):
             self._lot_size_cache[key] = 100
             return 100
-        if exch in ("XNAS", "XNYS"):
+        if exch in (EXCHANGE.XNAS, EXCHANGE.XNYS):
             self._lot_size_cache[key] = 1
             return 1
-        if exch == "XHKG":
+        if exch == EXCHANGE.XHKG:
             lot = self._hk_lot_map.get(code.upper())
             if lot:
                 self._lot_size_cache[key] = int(lot)
@@ -290,14 +292,14 @@ class FutuDataSource(AbstractDataSource):
         target_exchanges = set()
         for m in markets:
             if m == "SH":
-                target_exchanges.add("XSHG")
+                target_exchanges.add(EXCHANGE.XSHG)
             elif m == "SZ":
-                target_exchanges.add("XSHE")
+                target_exchanges.add(EXCHANGE.XSHE)
             elif m == "HK":
-                target_exchanges.add("XHKG")
+                target_exchanges.add(EXCHANGE.XHKG)
             elif m == "US":
-                target_exchanges.add("XNAS")
-                target_exchanges.add("XNYS")
+                target_exchanges.add(EXCHANGE.XNAS)
+                target_exchanges.add(EXCHANGE.XNYS)
 
         if not root.exists():
             return pandas.DatetimeIndex([])
@@ -794,14 +796,14 @@ class FutuDataSource(AbstractDataSource):
         target_exchanges = set()
         for m in self._markets:
             if m == "SH":
-                target_exchanges.add("XSHG")
+                target_exchanges.add(EXCHANGE.XSHG)
             elif m == "SZ":
-                target_exchanges.add("XSHE")
+                target_exchanges.add(EXCHANGE.XSHE)
             elif m == "HK":
-                target_exchanges.add("XHKG")
+                target_exchanges.add(EXCHANGE.XHKG)
             elif m == "US":
-                target_exchanges.add("XNAS")
-                target_exchanges.add("XNYS")
+                target_exchanges.add(EXCHANGE.XNAS)
+                target_exchanges.add(EXCHANGE.XNYS)
 
         if not root.exists():
             raise ValueError("no data")

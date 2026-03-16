@@ -7,6 +7,7 @@ from typing import List, Tuple
 import pandas as pd
 import futu as ft
 
+from rqalpha.const import EXCHANGE
 from .constants import FUTU_HOST, FUTU_PORT
 from .utils import rq_to_futu_code
 
@@ -44,11 +45,11 @@ def parse_codes(raw: List[str]) -> List[Tuple[str, str, str]]:
             continue
         parts = c.split(".")
         if len(parts) == 2 and parts[1].upper() in (
-            "XSHG",
-            "XSHE",
-            "XHKG",
-            "XNAS",
-            "XNYS",
+            EXCHANGE.XSHG,
+            EXCHANGE.XSHE,
+            EXCHANGE.XHKG,
+            EXCHANGE.XNAS,
+            EXCHANGE.XNYS,
         ):
             market, symbol = rq_to_futu_code(c)
             res.append((market, symbol, c.upper()))

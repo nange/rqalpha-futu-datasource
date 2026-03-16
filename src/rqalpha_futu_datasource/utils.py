@@ -7,6 +7,7 @@ including data conversion, validation, and helper functions.
 
 from typing import Any, Dict, Tuple
 import datetime
+from rqalpha.const import EXCHANGE
 from .constants import ERROR_INVALID_SYMBOL
 
 
@@ -56,13 +57,13 @@ def rq_to_futu_code(order_book_id: str) -> Tuple[str, str]:
     if len(parts) != 2:
         raise ValueError(ERROR_INVALID_SYMBOL)
     code, exch = parts[0], parts[1].upper()
-    if exch == "XSHG":
+    if exch == EXCHANGE.XSHG:
         return "SH", code
-    if exch == "XSHE":
+    if exch == EXCHANGE.XSHE:
         return "SZ", code
-    if exch == "XHKG":
+    if exch == EXCHANGE.XHKG:
         return "HK", code
-    if exch in ("XNAS", "XNYS"):
+    if exch in (EXCHANGE.XNAS, EXCHANGE.XNYS):
         return "US", code
     raise ValueError(ERROR_INVALID_SYMBOL)
 

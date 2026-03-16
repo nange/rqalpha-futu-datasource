@@ -203,13 +203,11 @@ def test_history_bars_single_field():
 
 
 def test_instrument_timezone():
-    import pytz
-
     # We mock os.path.exists to simulate data files existing for these instruments
     # so get_instruments returns them.
     with patch("os.path.exists") as mock_exists:
         mock_exists.return_value = True
-        
+
         # Initialize with all markets to allow retrieving instruments from HK/US
         ds = FutuDataSource(data_dir="dummy_dir", market=["cn", "hk", "us"])
 

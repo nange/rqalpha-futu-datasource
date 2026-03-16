@@ -273,42 +273,6 @@ class FutuDataSource(AbstractDataSource):
             if code and code not in self._hk_lot_map:
                 self._hk_lot_map[code] = lot
 
-    def _load_us_exchange_map_from_path(self, path: str) -> None:
-        try:
-            df = pandas.read_csv(path)
-        except Exception:
-            return
-        cols_map = {c.lower(): c for c in df.columns}
-
-        has_code = any(c in cols_map for c in ("code", "symbol"))
-        has_exch = any(c in cols_map for c in ("exchange", "exch", "market"))
-
-        if not (has_code and has_exch):
-            return
-
-        code_col_name = (
-            "code"
-            if "code" in cols_map
-            else ("symbol" if "symbol" in cols_map else None)
-        )
-        code_col = cols_map.get(code_col_name)
-
-        exch_col = None
-        for c in ("exchange", "exch", "market"):
-            if c in cols_map:
-                exch_col = cols_map[c]
-                break
-        if not code_col or not exch_col:
-            return
-        for _, row in df.iterrows():
-            try:
-                code = str(row[code_col]).strip().upper()
-                exch = str(row[exch_col]).strip().upper()
-            except Exception:
-                continue
-            if code and code not in self._us_exchange_map:
-                self._us_exchange_map[code] = exch
-
     def _collect_trading_days(self, markets: Sequence[str]) -> pandas.DatetimeIndex:
         from pathlib import Path
 

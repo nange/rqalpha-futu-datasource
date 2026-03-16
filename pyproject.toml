@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "futu-api>=9.4.5408",
+    "futu-api>=10.0.6008",
     "rqalpha @ git+https://github.com/nange/rqalpha.git",
 ]
 

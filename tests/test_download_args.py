@@ -1,24 +1,33 @@
+import pytest
 from rqalpha_futu_datasource.download import parse_codes, PERIOD_MAP, parse_args
 from rqalpha_futu_datasource.constants import FUTU_HOST, FUTU_PORT
 
 
-def test_parse_codes_both_formats():
+def test_parse_codes_valid_formats():
     codes = parse_codes(
         [
             "000001.XSHE",
-            "SZ.000002",
             "600000.XSHG",
-            "SH.600001",
-            "US.AAPL",
             "00700.XHKG",
+            "AAPL.XNAS",
         ]
     )
-    assert ("SZ", "000001") in codes
-    assert ("SZ", "000002") in codes
-    assert ("SH", "600000") in codes
-    assert ("SH", "600001") in codes
-    assert ("US", "AAPL") in codes
-    assert ("HK", "00700") in codes
+    # New format: (market, symbol, order_book_id)
+    assert ("SZ", "000001", "000001.XSHE") in codes
+    assert ("SH", "600000", "600000.XSHG") in codes
+    assert ("HK", "00700", "00700.XHKG") in codes
+    assert ("US", "AAPL", "AAPL.XNAS") in codes
+
+
+def test_parse_codes_invalid_format():
+    with pytest.raises(ValueError, match="Invalid code format"):
+        parse_codes(["SZ.000002"])
+
+    with pytest.raises(ValueError, match="Invalid code format"):
+        parse_codes(["SH.600001"])
+
+    with pytest.raises(ValueError, match="Invalid code format"):
+        parse_codes(["US.AAPL"])
 
 
 def test_period_map_contains_defaults():

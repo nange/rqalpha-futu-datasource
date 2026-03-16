@@ -29,6 +29,7 @@ class FutuDSMod(AbstractMod):
                 hk_lot_map = mod_config.get("hk_lot_map")
             except Exception:
                 hk_lot_map = None
+
         if not data_dir:
             cfg = getattr(env, "config", None)
             base = None

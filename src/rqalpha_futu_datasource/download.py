@@ -33,8 +33,11 @@ def validate_time(time_str: str | None):
     raise ValueError(f"Invalid time format or value: {time_str}")
 
 
-def parse_codes(raw: List[str]) -> List[Tuple[str, str]]:
-    res: List[Tuple[str, str]] = []
+def parse_codes(raw: List[str]) -> List[Tuple[str, str, str]]:
+    """
+    Returns list of (market, symbol, order_book_id)
+    """
+    res: List[Tuple[str, str, str]] = []
     for c in raw:
         c = c.strip()
         if not c:
@@ -48,27 +51,27 @@ def parse_codes(raw: List[str]) -> List[Tuple[str, str]]:
             "XNYS",
         ):
             market, symbol = rq_to_futu_code(c)
-            res.append((market, symbol))
-        elif len(parts) == 2 and parts[0].upper() in ("SH", "SZ", "HK", "US"):
-            res.append((parts[0].upper(), parts[1]))
+            res.append((market, symbol, c.upper()))
         else:
-            raise ValueError("invalid code format")
+            raise ValueError(
+                f"Invalid code format: {c}. Please use RQAlpha format (e.g., 000001.XSHE, AAPL.XNAS)."
+            )
     return res
 
 
-def ensure_dir(root: str, market: str, symbol: str):
-    Path(root, market, symbol).mkdir(parents=True, exist_ok=True)
+def ensure_dir(root: str, order_book_id: str):
+    Path(root, order_book_id).mkdir(parents=True, exist_ok=True)
 
 
 def file_name(period: str) -> str:
     return f"{period}.csv"
 
 
-def save_csv(root: str, market: str, symbol: str, period: str, df: pd.DataFrame):
+def save_csv(root: str, order_book_id: str, period: str, df: pd.DataFrame):
     cols = ["time_key", "open", "high", "low", "close", "volume", "turnover"]
     out = df[cols].copy()
-    ensure_dir(root, market, symbol)
-    out.to_csv(Path(root, market, symbol, file_name(period)), index=False)
+    ensure_dir(root, order_book_id)
+    out.to_csv(Path(root, order_book_id, file_name(period)), index=False)
 
 
 def fetch_history(
@@ -110,7 +113,7 @@ def fetch_history(
 
 def download(
     root: str,
-    codes: List[Tuple[str, str]],
+    codes: List[Tuple[str, str, str]],
     periods: List[str],
     start: str | None,
     end: str | None,
@@ -119,11 +122,11 @@ def download(
 ):
     ctx = ft.OpenQuoteContext(host=host, port=port)
     try:
-        for market, symbol in codes:
+        for market, symbol, order_book_id in codes:
             futu_code = f"{market}.{symbol}"
             for p in periods:
                 df = fetch_history(ctx, futu_code, p, start, end)
-                save_csv(root, market, symbol, p, df)
+                save_csv(root, order_book_id, p, df)
     finally:
         ctx.close()
 

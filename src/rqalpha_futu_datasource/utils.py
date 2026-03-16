@@ -71,11 +71,11 @@ def dt_to_int(dt: datetime.datetime, daily: bool) -> int:
     return int(dt.strftime("%Y%m%d%H%M%S"))
 
 
-def futu_path(data_root: str, market: str, symbol: str, frequency: str) -> str:
+def futu_path(data_root: str, order_book_id: str, frequency: str) -> str:
     from .constants import SUPPORTED_FREQUENCIES
 
     freq = frequency.lower()
     if freq not in SUPPORTED_FREQUENCIES:
         raise ValueError("unsupported frequency")
     file_freq = "1mo" if freq == "1mon" else freq
-    return f"{data_root}/{market}/{symbol}/{file_freq}.csv"
+    return f"{data_root}/{order_book_id}/{file_freq}.csv"

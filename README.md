@@ -23,17 +23,16 @@ make sync
 
 - 启动本地 OpenD(默认 `127.0.0.1:11111`)
 - 运行下载脚本，将数据保存为 CSV：
-  - `python -m rqalpha_futu_datasource.download --data-dir data --codes 000001.XSHE,600000.XSHG,00700.XHKG,US.AAPL --periods 1m,3m,5m,1d,1w --start 2024-01-01 --end 2024-12-31`
+  - `python -m rqalpha_futu_datasource.download --data-dir data --codes 000001.XSHE,600000.XSHG,00700.XHKG,AAPL.XNAS --periods 1m,3m,5m,1d,1w --start 2024-01-01 --end 2024-12-31`
   - 或使用代码文件：`python -m rqalpha_futu_datasource.download --data-dir data --code-file ./codes.txt`
-- 目录结构：`data/<MARKET>/<SYMBOL>/<period>.csv`，例如：`data/SZ/000001/1d.csv`
+- 目录结构：`data/<ORDER_BOOK_ID>/<period>.csv`，例如：`data/000001.XSHE/1d.csv`
 - 可通过环境变量指定目录：`set FUTU_DATA_PATH=...`（Windows）
 
 > 注意：
 >
 > - 下载富途原始数据时，也可以指定富途OpenD的地址和端口号，如"--host 192.168.0.2 --port 22222"
-> - 为了使用方便，`--codes`的格式同时支持富途的股票代码格式（如 `SZ.000001`、`SH.600000`、`HK.00700`、`US.AAPL`）与 `RQAlpha` 的股票代码格式（如 `000001.XSHE`、`600000.XSHG`、`00700.XHKG`、`AAPL.XNAS`）。
-> - 同时，`--code-file`参数也支持同时包含这两种格式的股票代码，每个股票代码占一行。
-> - 但回测代码里面的股票代码格式，必须是 `RQAlpha` 格式（如 `000001.XSHE`、`600000.XSHG`、`00700.XHKG`、`AAPL.XNAS`）。
+> - `--codes` 只支持 `RQAlpha` 的股票代码格式（如 `000001.XSHE`、`600000.XSHG`、`00700.XHKG`、`AAPL.XNAS`）。
+> - 同样，`--code-file` 参数指定的文件中，每个股票代码占一行，也必须是 `RQAlpha` 格式。
 
 ### 在 RQAlpha 中启用 Futu 数据源
 

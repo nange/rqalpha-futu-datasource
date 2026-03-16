@@ -149,7 +149,13 @@ class FutuDataSource(AbstractDataSource):
                 except Exception:
                     code, exch = s, ""
                 exch = exch.upper()
-                if exch not in (EXCHANGE.XSHE, EXCHANGE.XSHG, EXCHANGE.XHKG, EXCHANGE.XNAS, EXCHANGE.XNYS):
+                if exch not in (
+                    EXCHANGE.XSHE,
+                    EXCHANGE.XSHG,
+                    EXCHANGE.XHKG,
+                    EXCHANGE.XNAS,
+                    EXCHANGE.XNYS,
+                ):
                     # 默认按 A 股处理
                     exch = EXCHANGE.XSHE
 

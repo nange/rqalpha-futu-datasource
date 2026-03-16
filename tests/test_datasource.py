@@ -202,6 +202,48 @@ def test_history_bars_single_field():
     assert numpy.isclose(arr_close[-1], 11.052)
 
 
+def test_instrument_timezone():
+    import pytz
+
+    # We mock os.path.exists to simulate data files existing for these instruments
+    # so get_instruments returns them.
+    with patch("os.path.exists") as mock_exists:
+        mock_exists.return_value = True
+        
+        # Initialize with all markets to allow retrieving instruments from HK/US
+        ds = FutuDataSource(data_dir="dummy_dir", market=["cn", "hk", "us"])
+
+        # Test HK
+        instruments = ds.get_instruments(["00700.XHKG"])
+        assert len(instruments) == 1
+        ins = instruments[0]
+        assert str(ins.timezone) == "Asia/Hong_Kong"
+
+        # Test US (XNAS)
+        instruments = ds.get_instruments(["AAPL.XNAS"])
+        assert len(instruments) == 1
+        ins = instruments[0]
+        assert str(ins.timezone) == "US/Eastern"
+
+        # Test US (XNYS)
+        instruments = ds.get_instruments(["ORCL.XNYS"])
+        assert len(instruments) == 1
+        ins = instruments[0]
+        assert str(ins.timezone) == "US/Eastern"
+
+        # Test CN (XSHE)
+        instruments = ds.get_instruments(["000001.XSHE"])
+        assert len(instruments) == 1
+        ins = instruments[0]
+        assert str(ins.timezone) == "Asia/Shanghai"
+
+        # Test CN (XSHG)
+        instruments = ds.get_instruments(["600000.XSHG"])
+        assert len(instruments) == 1
+        ins = instruments[0]
+        assert str(ins.timezone) == "Asia/Shanghai"
+
+
 def test_history_bars_multi_fields():
     ds = FutuDataSource(data_dir="tests/data")
     ins = DummyInstrument("000001.XSHE")

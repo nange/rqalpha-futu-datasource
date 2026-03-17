@@ -257,31 +257,20 @@ class FutuDataSource(AbstractDataSource):
             if code and code not in self._hk_lot_map:
                 self._hk_lot_map[code] = lot
 
-    def _collect_trading_days(self, markets: Sequence[str]) -> pandas.DatetimeIndex:
+    def _collect_trading_days(
+        self, target_exchanges: Sequence[str]
+    ) -> pandas.DatetimeIndex:
         from pathlib import Path
 
         days = []
         root = Path(self._data_dir)
 
-        if not markets:
+        if not target_exchanges:
             raise ValueError(
-                "FutuDataSource: markets must be provided to determine trading calendar."
+                "FutuDataSource: target_exchanges must be provided to determine trading calendar."
             )
 
-        # 这里的 markets 是 SH, SZ, HK, US 等
-        # 我们需要遍历 root 下的所有目录，看哪些符合
-
-        target_exchanges = set()
-        for m in markets:
-            if m == "SH":
-                target_exchanges.add(EXCHANGE.XSHG)
-            elif m == "SZ":
-                target_exchanges.add(EXCHANGE.XSHE)
-            elif m == "HK":
-                target_exchanges.add(EXCHANGE.XHKG)
-            elif m == "US":
-                target_exchanges.add(EXCHANGE.XNAS)
-                target_exchanges.add(EXCHANGE.XNYS)
+        target_exchanges_set = set(target_exchanges)
 
         if not root.exists():
             return pandas.DatetimeIndex([])
@@ -298,7 +287,7 @@ class FutuDataSource(AbstractDataSource):
                 except ValueError:
                     continue
 
-                if exch not in target_exchanges:
+                if exch not in target_exchanges_set:
                     continue
 
                 # 读取 1d.csv
@@ -335,16 +324,16 @@ class FutuDataSource(AbstractDataSource):
         # 这里我们尝试加载所有已知的市场日历，只要本地数据存在
 
         # 定义所有可能的市场映射
-        all_market_map = {
-            TRADING_CALENDAR_TYPE.CN_STOCK: ["SH", "SZ"],
-            TRADING_CALENDAR_TYPE.HK_STOCK: ["HK"],
-            TRADING_CALENDAR_TYPE.US_STOCK: ["US"],
+        all_exchange_map = {
+            TRADING_CALENDAR_TYPE.CN_STOCK: [EXCHANGE.XSHG, EXCHANGE.XSHE],
+            TRADING_CALENDAR_TYPE.HK_STOCK: [EXCHANGE.XHKG],
+            TRADING_CALENDAR_TYPE.US_STOCK: [EXCHANGE.XNAS, EXCHANGE.XNYS],
         }
 
-        for cal_type, market_codes in all_market_map.items():
+        for cal_type, target_exchanges in all_exchange_map.items():
             # 尝试收集该类型下所有市场的交易日
             try:
-                cal = self._collect_trading_days(market_codes)
+                cal = self._collect_trading_days(target_exchanges)
                 if not cal.empty:
                     calendars[cal_type] = cal
             except Exception as e:
@@ -352,7 +341,7 @@ class FutuDataSource(AbstractDataSource):
                 from rqalpha.utils.logger import system_log
 
                 system_log.warning(
-                    f"FutuDataSource: failed to collect trading days for {cal_type} ({market_codes}): {e}"
+                    f"FutuDataSource: failed to collect trading days for {cal_type} ({target_exchanges}): {e}"
                 )
                 continue
 

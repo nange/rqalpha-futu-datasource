@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 from rqalpha.interface import AbstractMod
 from .datasource import FutuDataSource
@@ -20,6 +19,7 @@ def _get_config(obj, key):
     except (TypeError, KeyError, Exception):
         return None
 
+
 class FutuDSMod(AbstractMod):
     def start_up(self, env, mod_config):
         data_dir = _get_config(mod_config, "futu_data_path")
@@ -32,7 +32,7 @@ class FutuDSMod(AbstractMod):
             bundle = _get_config(base, "data_bundle_path") if base else None
             if bundle:
                 data_dir = bundle
-                
+
         if not data_dir:
             data_dir = os.getenv("FUTU_DATA_PATH")
 

@@ -850,7 +850,7 @@ class FutuDataSource(AbstractDataSource):
             if df is None:
                 return [False for _ in dates]
             self._cache[key] = df
-        
+
         suspended_dates = set(df[df["volume"] == 0]["datetime"].dt.date)
         res: List[bool] = []
         for d in dates:

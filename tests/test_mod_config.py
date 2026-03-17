@@ -65,7 +65,7 @@ def test_start_up_default(mod, env, mod_config):
 def test_ignore_mod_config_markets(mod, env, mod_config):
     # Set mod_config.markets to something else
     mod_config.markets = "us"
-    mod_config.get.side_effect = lambda k: "us" if k == "markets" else None
+    mod_config.get.side_effect = lambda k, default=None: "us" if k == "markets" else default
 
     # Set base.market to 'hk'
     env.config.base.market = "hk"

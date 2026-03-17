@@ -850,6 +850,8 @@ class FutuDataSource(AbstractDataSource):
             if df is None:
                 return [False for _ in dates]
             self._cache[key] = df
+        
+        suspended_dates = set(df[df["volume"] == 0]["datetime"].dt.date)
         res: List[bool] = []
         for d in dates:
             if isinstance(d, pandas.Timestamp):
@@ -864,11 +866,7 @@ class FutuDataSource(AbstractDataSource):
                 except Exception:
                     res.append(False)
                     continue
-            row = df[df["datetime"].dt.date == day]
-            if row.empty:
-                res.append(False)
-            else:
-                res.append(float(row.iloc[0]["volume"]) == 0.0)
+            res.append(day in suspended_dates)
         return res
 
     def is_st_stock(self, order_book_id: str, dates: Sequence) -> Sequence[bool]:

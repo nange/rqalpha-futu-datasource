@@ -23,12 +23,6 @@ class FutuDataSource(AbstractDataSource):
     在扩展模块中，可以通过调用 ``env.set_data_source`` 来替换rqalpha默认的数据源。
     """
 
-    MARKET_MAP = {
-        "cn": ["SH", "SZ"],
-        "hk": ["HK"],
-        "us": ["US"],
-    }
-
     def __init__(
         self,
         data_dir: str,
@@ -37,12 +31,11 @@ class FutuDataSource(AbstractDataSource):
         hk_lot_map_path: str | None = None,
     ):
         import os
-        from .utils import rq_to_futu_code, futu_path, dt_to_int
+        from .utils import futu_path, dt_to_int
 
         self._data_dir = (
             data_dir or os.getenv("FUTU_DATA_PATH") or os.path.join(os.getcwd(), "data")
         )
-        self._rq_to_futu_code = rq_to_futu_code
         self._futu_path = futu_path
         self._dt_to_int = dt_to_int
         self._cache: Dict[Tuple[str, str], pandas.DataFrame] = {}
@@ -54,14 +47,7 @@ class FutuDataSource(AbstractDataSource):
         else:
             markets = market
 
-        resolved_markets = []
-        for m in markets:
-            lower_m = m.lower()
-            if lower_m in self.MARKET_MAP:
-                resolved_markets.extend(self.MARKET_MAP[lower_m])
-            else:
-                resolved_markets.append(m)
-        self._markets = sorted(list(set(resolved_markets)))
+        self._markets = sorted(list(set(m.upper() for m in markets)))
 
         if hk_lot_map:
             for k, v in hk_lot_map.items():
@@ -159,18 +145,14 @@ class FutuDataSource(AbstractDataSource):
                     # 默认按 A 股处理
                     exch = EXCHANGE.XSHE
 
-                # 检查 exch 是否在 self._markets 允许的范围内
-                is_allowed = False
-                if exch == EXCHANGE.XSHG and "SH" in self._markets:
-                    is_allowed = True
-                elif exch == EXCHANGE.XSHE and "SZ" in self._markets:
-                    is_allowed = True
-                elif exch == EXCHANGE.XHKG and "HK" in self._markets:
-                    is_allowed = True
-                elif exch in (EXCHANGE.XNAS, EXCHANGE.XNYS) and "US" in self._markets:
-                    is_allowed = True
+                from .utils import get_market_dir
 
-                if not is_allowed:
+                try:
+                    market_dir = get_market_dir(f"{code}.{exch}")
+                except ValueError:
+                    continue
+
+                if market_dir not in self._markets:
                     continue
 
                 # 若对应数据文件不存在，则跳过
@@ -187,38 +169,32 @@ class FutuDataSource(AbstractDataSource):
         if not root.exists():
             return instruments
 
-        for order_book_id_path in root.iterdir():
-            if not order_book_id_path.is_dir():
-                continue
-            order_book_id = order_book_id_path.name
-
-            try:
-                code, exch = order_book_id.split(".")
-            except ValueError:
+        for market_path in root.iterdir():
+            if not market_path.is_dir():
                 continue
 
-            # 重新实现 market 过滤逻辑
-            # self._markets 包含的是 SH, SZ, HK, US
-            is_target = False
-            if exch == EXCHANGE.XSHG and "SH" in self._markets:
-                is_target = True
-            elif exch == EXCHANGE.XSHE and "SZ" in self._markets:
-                is_target = True
-            elif exch == EXCHANGE.XHKG and "HK" in self._markets:
-                is_target = True
-            elif exch in (EXCHANGE.XNAS, EXCHANGE.XNYS) and "US" in self._markets:
-                is_target = True
-
-            if not is_target:
+            # 过滤不需要的 market
+            if market_path.name.upper() not in self._markets:
                 continue
 
-            daily_path = order_book_id_path / "1d.csv"
-            minute_path = order_book_id_path / "1m.csv"
+            # 遍历第二层：OrderBookID 目录
+            for order_book_id_path in market_path.iterdir():
+                if not order_book_id_path.is_dir():
+                    continue
+                order_book_id = order_book_id_path.name
 
-            if not (daily_path.exists() or minute_path.exists()):
-                continue
+                try:
+                    code, exch = order_book_id.split(".")
+                except ValueError:
+                    continue
 
-            instruments.append(self._create_instrument_obj(code, exch))
+                daily_path = order_book_id_path / "1d.csv"
+                minute_path = order_book_id_path / "1m.csv"
+
+                if not (daily_path.exists() or minute_path.exists()):
+                    continue
+
+                instruments.append(self._create_instrument_obj(code, exch))
 
         return instruments
 
@@ -310,33 +286,37 @@ class FutuDataSource(AbstractDataSource):
         if not root.exists():
             return pandas.DatetimeIndex([])
 
-        for order_book_id_path in root.iterdir():
-            if not order_book_id_path.is_dir():
-                continue
-            try:
-                _, exch = order_book_id_path.name.split(".")
-            except ValueError:
+        for market_path in root.iterdir():
+            if not market_path.is_dir():
                 continue
 
-            if exch not in target_exchanges:
-                continue
+            for order_book_id_path in market_path.iterdir():
+                if not order_book_id_path.is_dir():
+                    continue
+                try:
+                    _, exch = order_book_id_path.name.split(".")
+                except ValueError:
+                    continue
 
-            # 读取 1d.csv
-            p = order_book_id_path / "1d.csv"
-            if not p.exists():
-                continue
+                if exch not in target_exchanges:
+                    continue
 
-            try:
-                df = pandas.read_csv(p)
-            except Exception:
-                continue
-            if "time_key" not in df.columns:
-                continue
-            ts = pandas.to_datetime(df["time_key"]).dt.normalize()
-            if "volume" in df.columns:
-                mask = df["volume"].astype(numpy.float64) > 0.0
-                ts = ts[mask]
-            days.extend(ts.tolist())
+                # 读取 1d.csv
+                p = order_book_id_path / "1d.csv"
+                if not p.exists():
+                    continue
+
+                try:
+                    df = pandas.read_csv(p)
+                except Exception:
+                    continue
+                if "time_key" not in df.columns:
+                    continue
+                ts = pandas.to_datetime(df["time_key"]).dt.normalize()
+                if "volume" in df.columns:
+                    mask = df["volume"].astype(numpy.float64) > 0.0
+                    ts = ts[mask]
+                days.extend(ts.tolist())
 
         if not days:
             return pandas.DatetimeIndex([])
@@ -798,53 +778,39 @@ class FutuDataSource(AbstractDataSource):
         latest: datetime.datetime | None = None
         root = Path(self._data_dir)
 
-        # 将 self._markets 转换为 target_exchanges
-        target_exchanges = set()
-        for m in self._markets:
-            if m == "SH":
-                target_exchanges.add(EXCHANGE.XSHG)
-            elif m == "SZ":
-                target_exchanges.add(EXCHANGE.XSHE)
-            elif m == "HK":
-                target_exchanges.add(EXCHANGE.XHKG)
-            elif m == "US":
-                target_exchanges.add(EXCHANGE.XNAS)
-                target_exchanges.add(EXCHANGE.XNYS)
-
         if not root.exists():
             raise ValueError("no data")
 
-        for order_book_id_path in root.iterdir():
-            if not order_book_id_path.is_dir():
+        for market_path in root.iterdir():
+            if not market_path.is_dir():
                 continue
 
-            try:
-                _, exch = order_book_id_path.name.split(".")
-            except ValueError:
+            if market_path.name.upper() not in self._markets:
                 continue
 
-            if target_exchanges and exch not in target_exchanges:
-                continue
+            for order_book_id_path in market_path.iterdir():
+                if not order_book_id_path.is_dir():
+                    continue
 
-            p = order_book_id_path / f"{freq}.csv"
-            if not p.exists():
-                continue
+                p = order_book_id_path / f"{freq}.csv"
+                if not p.exists():
+                    continue
 
-            try:
-                df = pandas.read_csv(p)
-            except Exception:
-                continue
-            if "time_key" not in df.columns:
-                continue
-            ts = pandas.to_datetime(df["time_key"])
-            if len(ts) == 0:
-                continue
-            e = ts.min().to_pydatetime()
-            _latest = ts.max().to_pydatetime()
-            if earliest is None or e < earliest:
-                earliest = e
-            if latest is None or _latest > latest:
-                latest = _latest
+                try:
+                    df = pandas.read_csv(p)
+                except Exception:
+                    continue
+                if "time_key" not in df.columns:
+                    continue
+                ts = pandas.to_datetime(df["time_key"])
+                if len(ts) == 0:
+                    continue
+                e = ts.min().to_pydatetime()
+                _latest = ts.max().to_pydatetime()
+                if earliest is None or e < earliest:
+                    earliest = e
+                if latest is None or _latest > latest:
+                    latest = _latest
         if earliest is None or latest is None:
             raise ValueError("no data")
         return earliest.date(), latest.date()

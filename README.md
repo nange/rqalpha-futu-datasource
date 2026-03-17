@@ -25,7 +25,7 @@ make sync
 - 运行下载脚本，将数据保存为 CSV：
   - `python -m rqalpha_futu_datasource.download --data-dir data --codes 000001.XSHE,600000.XSHG,00700.XHKG,AAPL.XNAS --periods 1m,3m,5m,1d,1w --start 2024-01-01 --end 2024-12-31`
   - 或使用代码文件：`python -m rqalpha_futu_datasource.download --data-dir data --code-file ./codes.txt`
-- 目录结构：`data/<ORDER_BOOK_ID>/<period>.csv`，例如：`data/000001.XSHE/1d.csv`
+- 目录结构：`data/<MARKET>/<ORDER_BOOK_ID>/<period>.csv`，例如：`data/CN/000001.XSHE/1d.csv`, `data/HK/00700.XHKG/1d.csv`, `data/US/AAPL.XNAS/1d.csv`
 - 可通过环境变量指定目录：`set FUTU_DATA_PATH=...`（Windows）
 
 > 注意：

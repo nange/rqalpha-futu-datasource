@@ -29,7 +29,7 @@ def mod_config():
 @pytest.mark.parametrize(
     "market, expected_markets",
     [
-        ("cn", ["SH", "SZ"]),
+        ("cn", ["CN"]),
         ("hk", ["HK"]),
         ("us", ["US"]),
     ],
@@ -57,9 +57,9 @@ def test_start_up_default(mod, env, mod_config):
 
     args, kwargs = env.set_data_source.call_args
     ds = args[0]
-    # Should default to cn -> SH, SZ
+    # Should default to cn -> CN
     assert isinstance(ds, FutuDataSource)
-    assert ds._markets == ["SH", "SZ"]
+    assert ds._markets == ["CN"]
 
 
 def test_ignore_mod_config_markets(mod, env, mod_config):

@@ -5,7 +5,7 @@ This module contains utility functions used by the Futu DataSource implementatio
 including data conversion, validation, and helper functions.
 """
 
-from typing import Any, Dict, Tuple
+from typing import Tuple
 import datetime
 from rqalpha.const import EXCHANGE
 from .constants import ERROR_INVALID_SYMBOL
@@ -26,28 +26,6 @@ def validate_symbol(symbol: str) -> bool:
 
     # Basic validation - can be enhanced based on Futu's symbol format
     return len(symbol) >= 2 and symbol.isalnum()
-
-
-def convert_futu_bar_to_rqalpha(bar_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convert Futu API bar data to RQAlpha format.
-
-    Args:
-        bar_data: Raw bar data from Futu API
-
-    Returns:
-        Dict: Bar data in RQAlpha format
-    """
-    # This is a placeholder implementation
-    # Actual conversion would depend on Futu API response format
-    return {
-        "open": bar_data.get("open_price", 0.0),
-        "high": bar_data.get("high_price", 0.0),
-        "low": bar_data.get("low_price", 0.0),
-        "close": bar_data.get("close_price", 0.0),
-        "volume": bar_data.get("volume", 0),
-        "datetime": bar_data.get("datetime", datetime.datetime.now()),
-    }
 
 
 def rq_to_futu_code(order_book_id: str) -> Tuple[str, str]:
@@ -72,11 +50,30 @@ def dt_to_int(dt: datetime.datetime, daily: bool) -> int:
     return int(dt.strftime("%Y%m%d%H%M%S"))
 
 
+def get_market_dir(order_book_id: str) -> str:
+    """
+    Get the market directory name based on order_book_id.
+    """
+    parts = order_book_id.split(".")
+    if len(parts) != 2:
+        raise ValueError(ERROR_INVALID_SYMBOL)
+    exch = parts[1].upper()
+    if exch in (EXCHANGE.XSHG, EXCHANGE.XSHE):
+        return "CN"
+    if exch == EXCHANGE.XHKG:
+        return "HK"
+    if exch in (EXCHANGE.XNAS, EXCHANGE.XNYS):
+        return "US"
+    raise ValueError(f"Unknown exchange in order_book_id: {order_book_id}")
+
+
 def futu_path(data_root: str, order_book_id: str, frequency: str) -> str:
     from .constants import SUPPORTED_FREQUENCIES
+    import os
 
     freq = frequency.lower()
     if freq not in SUPPORTED_FREQUENCIES:
         raise ValueError("unsupported frequency")
     file_freq = "1mo" if freq == "1mon" else freq
-    return f"{data_root}/{order_book_id}/{file_freq}.csv"
+    market_dir = get_market_dir(order_book_id)
+    return os.path.join(data_root, market_dir, order_book_id, f"{file_freq}.csv")

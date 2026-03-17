@@ -9,7 +9,7 @@ import futu as ft
 
 from rqalpha.const import EXCHANGE
 from .constants import FUTU_HOST, FUTU_PORT
-from .utils import rq_to_futu_code
+from .utils import rq_to_futu_code, get_market_dir
 
 
 PERIOD_MAP = {
@@ -60,8 +60,13 @@ def parse_codes(raw: List[str]) -> List[Tuple[str, str, str]]:
     return res
 
 
+def get_store_dir(root: str, order_book_id: str) -> Path:
+    market_dir = get_market_dir(order_book_id)
+    return Path(root, market_dir, order_book_id)
+
+
 def ensure_dir(root: str, order_book_id: str):
-    Path(root, order_book_id).mkdir(parents=True, exist_ok=True)
+    get_store_dir(root, order_book_id).mkdir(parents=True, exist_ok=True)
 
 
 def file_name(period: str) -> str:
@@ -72,7 +77,8 @@ def save_csv(root: str, order_book_id: str, period: str, df: pd.DataFrame):
     cols = ["time_key", "open", "high", "low", "close", "volume", "turnover"]
     out = df[cols].copy()
     ensure_dir(root, order_book_id)
-    out.to_csv(Path(root, order_book_id, file_name(period)), index=False)
+    store_dir = get_store_dir(root, order_book_id)
+    out.to_csv(store_dir / file_name(period), index=False)
 
 
 def fetch_history(

@@ -105,7 +105,7 @@ code,lot_size
 ```python
 config = {
     "base": {
-        "market": "cn",  # 可选值: "cn" (默认), "hk", "us"
+        "market": "cn",  # 可选值: "cn" (默认), "hk", "us" (不区分大小写)
         # ... 其他 base 配置
     },
     "mod": {

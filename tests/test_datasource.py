@@ -8,9 +8,76 @@ from rqalpha.model.tick import TickObject
 from rqalpha.interface import TRADING_CALENDAR_TYPE
 
 
+import pytest
+
+
 class DummyInstrument:
     def __init__(self, order_book_id: str):
         self.order_book_id = order_book_id
+
+
+@pytest.mark.parametrize(
+    "market_param, expected_obids",
+    [
+        # Case 1: 单个字符串 "cn"
+        ("cn", ["000001.XSHE", "600000.XSHG"]),
+        # Case 2: 包含单个元素的列表 ["cn"]
+        (["cn"], ["000001.XSHE", "600000.XSHG"]),
+        # Case 3: 单个字符串 "hk"
+        ("hk", ["00700.XHKG"]),
+        # Case 4: 包含多个元素的列表 ["us", "hk"]
+        (["us", "hk"], ["AAPL.XNAS", "ORCL.XNYS", "TSLA.XNAS", "00700.XHKG"]),
+        # Case 5: 包含所有支持市场的列表
+        (
+            ["cn", "hk", "us"],
+            [
+                "000001.XSHE",
+                "600000.XSHG",
+                "00700.XHKG",
+                "AAPL.XNAS",
+                "ORCL.XNYS",
+                "TSLA.XNAS",
+            ],
+        ),
+    ],
+)
+def test_init_market_param_real_data(market_param, expected_obids):
+    """
+    使用 tests/data 目录下的真实数据测试 FutuDataSource 的 'market' 参数初始化。
+    确保 'market' 参数（无论是字符串还是列表）能够正确过滤加载的 Instrument。
+    """
+    ds = FutuDataSource(data_dir="tests/data", market=market_param)
+    instruments = ds.get_instruments()
+
+    found_obids = {i.order_book_id for i in instruments}
+
+    # 检查是否包含了所有预期的合约代码 (order_book_id)
+    for obid in expected_obids:
+        assert obid in found_obids, f"预期在 market={market_param} 时找到 {obid}"
+
+    # 检查是否包含了不属于请求市场的预期外合约
+    # 基于 order_book_id 的后缀定义已知的市场
+    all_possible_suffixes = {".XSHE", ".XSHG", ".XHKG", ".XNAS", ".XNYS"}
+
+    # 筛选出当前测试用例预期会包含的后缀
+    expected_suffixes = set()
+    for obid in expected_obids:
+        for suffix in all_possible_suffixes:
+            if obid.endswith(suffix):
+                expected_suffixes.add(suffix)
+                break
+
+    # 验证找到的合约中没有来自预期外市场的合约
+    for obid in found_obids:
+        for suffix in expected_suffixes:
+            if obid.endswith(suffix):
+                break
+
+        # 严格检查：确保所有找到的合约都在预期列表中
+        # (假设 tests/data 中的数据是静态的，并且在 expected_obids 中列出了所有对应的文件)
+        assert obid in expected_obids, (
+            f"在 market={market_param} 时找到了预期外的合约 {obid}"
+        )
 
 
 def test_history_bars_daily():

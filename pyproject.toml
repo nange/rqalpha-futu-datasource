@@ -22,6 +22,7 @@ classifiers = [
 dependencies = [
     "futu-api>=10.0.6008",
     "rqalpha @ git+https://github.com/nange/rqalpha.git",
+    "ruff>=0.15.6",
 ]
 
 [build-system]
@@ -35,4 +36,4 @@ packages = ["src/rqalpha_futu_datasource"]
 allow-direct-references = true
 
 [dependency-groups]
-dev = ["ruff>=0.14.3", "pytest>=9.0.0"]
+dev = ["ruff>=0.15.6", "pytest>=9.0.0"]

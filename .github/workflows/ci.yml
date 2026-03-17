@@ -9,8 +9,12 @@ permissions:
 
 jobs:
   lint_and_test:
-    name: Lint and Test
+    name: Lint and Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,7 +22,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: ${{ matrix.python-version }}
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v2

@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from rqalpha import run_func
 from rqalpha.api import subscribe, history_bars, current_snapshot, order_shares
 
@@ -101,6 +102,7 @@ def handle_bar_1m(context, bar_dict):
     assert float(last["close"]) == 10.782
 
     now = context.now
+
     if now.strftime("%Y-%m-%d %H:%M:%S") != "2024-11-01 09:31:00":
         return
 
@@ -250,6 +252,109 @@ def test_run_with_futu_datasource():
     run_func(init=init, handle_bar=handle_bar, config=config)
 
 
+def init_validation(context):
+    context.codes = ["00700.XHKG", "AAPL.XNAS"]
+    context.order_count = 0
+    subscribe(context.codes)
+
+    context.hk_bars = []
+    context.us_bars = []
+    context.hk_checked = False
+    context.us_checked = False
+
+    base_dir = os.path.abspath("tests/data")
+    hk_path = os.path.join(base_dir, "HK", "00700.XHKG", "1m.csv")
+    us_path = os.path.join(base_dir, "US", "AAPL.XNAS", "1m.csv")
+
+    df_hk = pd.read_csv(hk_path)
+    df_hk["datetime"] = pd.to_datetime(df_hk["time_key"])
+    # filter out 09:30:00 as rqalpha's trading minute starts from 09:31:00
+    df_hk = df_hk[df_hk["datetime"].dt.time != pd.Timestamp("09:30:00").time()]
+    context.hk_truth = df_hk[
+        df_hk["datetime"].dt.date == pd.Timestamp("2024-11-01").date()
+    ].sort_values("datetime")
+
+    df_us = pd.read_csv(us_path)
+    df_us["datetime"] = pd.to_datetime(df_us["time_key"])
+    context.us_truth = df_us[
+        df_us["datetime"].dt.date == pd.Timestamp("2024-11-01").date()
+    ].sort_values("datetime")
+
+
+def handle_bar_validation(context, bar_dict):
+    # only check time when the bar belongs to today and volume is not nan
+    import math
+
+    obj = bar_dict["00700.XHKG"]
+    if (
+        obj.datetime.date() == context.now.date()
+        and obj.datetime.time() <= context.now.time()
+        and not math.isnan(obj.volume)
+    ):
+        context.hk_bars.append(obj)
+        if obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 16:00:00":
+            context.hk_checked = True
+            assert float(obj.close) == 414.7
+            hk_collected_times = [
+                b.datetime.strftime("%Y-%m-%d %H:%M:%S") for b in context.hk_bars
+            ]
+            hk_truth_times = (
+                context.hk_truth["datetime"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist()
+            )
+            # 检查收集到的时间是否与实际数据的时间匹配
+            assert hk_collected_times == hk_truth_times
+
+    obj = bar_dict["AAPL.XNAS"]
+    if (
+        obj.datetime.date() == context.now.date()
+        and obj.datetime.time() <= context.now.time()
+    ):
+        context.us_bars.append(obj)
+        if obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 16:00:00":
+            context.us_checked = True
+            # check close price
+            assert float(obj.close) == 221.45527485
+            us_collected_times = [
+                b.datetime.strftime("%Y-%m-%d %H:%M:%S") for b in context.us_bars
+            ]
+            us_truth_times = (
+                context.us_truth["datetime"].dt.strftime("%Y-%m-%d %H:%M:%S").tolist()
+            )
+            # 检查收集到的时间是否与实际数据的时间匹配
+            assert us_collected_times == us_truth_times
+
+    now = context.now
+    if now.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 16:00:00":
+        assert context.hk_checked
+        assert context.us_checked
+
+
+def test_run_with_futu_datasource_validation():
+    config = {
+        "base": {
+            "start_date": "2024-11-01",
+            "end_date": "2024-11-01",
+            "accounts": {"stock": 100000},
+            "frequency": "1m",
+            "market": ["hk", "us"],
+        },
+        "extra": {
+            "log_level": "info",
+        },
+        "mod": {
+            "futu_ds": {
+                "enabled": True,
+                "lib": "rqalpha_futu_datasource.mod_futu_ds",
+                "futu_data_path": os.path.abspath("tests/data"),
+                "hk_lot_map_path": os.path.abspath("tests/data/hk_lot_map.csv"),
+            }
+        },
+    }
+    result = run_func(
+        init=init_validation, handle_bar=handle_bar_validation, config=config
+    )
+
+
 def test_run_with_futu_datasource_1m():
     config = {
         "base": {
@@ -271,4 +376,4 @@ def test_run_with_futu_datasource_1m():
             }
         },
     }
-    run_func(init=init, handle_bar=handle_bar_1m, config=config)
+    result = run_func(init=init, handle_bar=handle_bar_1m, config=config)

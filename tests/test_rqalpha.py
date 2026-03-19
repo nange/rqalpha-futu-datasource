@@ -350,9 +350,7 @@ def test_run_with_futu_datasource_validation():
             }
         },
     }
-    result = run_func(
-        init=init_validation, handle_bar=handle_bar_validation, config=config
-    )
+    run_func(init=init_validation, handle_bar=handle_bar_validation, config=config)
 
 
 def test_run_with_futu_datasource_1m():
@@ -376,4 +374,4 @@ def test_run_with_futu_datasource_1m():
             }
         },
     }
-    result = run_func(init=init, handle_bar=handle_bar_1m, config=config)
+    run_func(init=init, handle_bar=handle_bar_1m, config=config)

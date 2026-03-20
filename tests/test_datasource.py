@@ -355,8 +355,21 @@ def test_get_trading_calendars():
 
 def test_get_exchange_rate():
     ds = FutuDataSource(data_dir="tests/data")
-    rate = ds.get_exchange_rate("000001.XSHE", datetime.date(2024, 11, 5))
-    assert rate == 1.0
+
+    # CN market (CNY -> CNY = 1.0)
+    rate_cn = ds.get_exchange_rate(datetime.date(2024, 11, 5), "CN")
+    assert rate_cn.ask_reference == 1.0
+    assert rate_cn.bid_reference == 1.0
+
+    # HK market (HKD -> CNY = 7.0 / 7.8)
+    rate_hk = ds.get_exchange_rate(datetime.date(2024, 11, 5), "HK")
+    assert rate_hk.ask_reference == 7.0 / 7.8
+    assert rate_hk.bid_reference == 7.0 / 7.8
+
+    # US market (USD -> CNY = 7.0)
+    rate_us = ds.get_exchange_rate(datetime.date(2024, 11, 5), "US")
+    assert rate_us.ask_reference == 7.0
+    assert rate_us.bid_reference == 7.0
 
 
 def test_get_yield_curve():

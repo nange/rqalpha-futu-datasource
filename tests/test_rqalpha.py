@@ -270,6 +270,34 @@ def init_validation(context):
 
 
 def handle_bar_validation(context, bar_dict):
+    if context.order_count < 3:
+        if context.order_count % 2 == 0:
+            order_hk = order_shares("00700.XHKG", 200)
+            print(f"Buy Order placed for HK in handle_bar_validation: {order_hk}")
+            assert order_hk is not None
+            assert order_hk.order_id
+            assert order_hk.trading_datetime.date() == context.now.date()
+
+            order_us = order_shares("AAPL.XNAS", 10)
+            print(f"Buy Order placed for US in handle_bar_validation: {order_us}")
+            assert order_us is not None
+            assert order_us.order_id
+            assert order_us.trading_datetime.date() == context.now.date()
+        else:
+            order_hk = order_shares("00700.XHKG", -200)
+            print(f"Sell Order placed for HK in handle_bar_validation: {order_hk}")
+            assert order_hk is not None
+            assert order_hk.order_id
+            assert order_hk.trading_datetime.date() == context.now.date()
+
+            order_us = order_shares("AAPL.XNAS", -10)
+            print(f"Sell Order placed for US in handle_bar_validation: {order_us}")
+            assert order_us is not None
+            assert order_us.order_id
+            assert order_us.trading_datetime.date() == context.now.date()
+
+        context.order_count += 1
+
     # only check time when the bar belongs to today and volume is not nan
     import math
 
@@ -322,7 +350,7 @@ def test_run_with_futu_datasource_validation():
         "base": {
             "start_date": "2024-11-01",
             "end_date": "2024-11-01",
-            "accounts": {"stock": 100000},
+            "accounts": {"stock": 1000000},
             "frequency": "1m",
             "market": ["hk", "us"],
         },

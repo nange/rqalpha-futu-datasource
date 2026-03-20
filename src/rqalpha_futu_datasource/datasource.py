@@ -8,7 +8,12 @@ RQAlpha 的 Futu DataSource 实现。
 from typing import Optional, List, Dict, Tuple, Iterable, Sequence
 import datetime
 
-from rqalpha.interface import AbstractDataSource, Instrument, TRADING_CALENDAR_TYPE
+from rqalpha.interface import (
+    AbstractDataSource,
+    Instrument,
+    TRADING_CALENDAR_TYPE,
+    ExchangeRate,
+)
 from rqalpha.const import MARKET, EXCHANGE
 from .constants import SUPPORTED_FREQUENCIES
 from rqalpha.model import BarObject, TickObject
@@ -347,8 +352,29 @@ class FutuDataSource(AbstractDataSource):
 
         return calendars
 
-    def get_exchange_rate(self, order_book_id: str, date: datetime.date) -> float:
-        return 1.0
+    def get_exchange_rate(
+        self, date: datetime.date, local: str, settlement: str = "CN"
+    ) -> ExchangeRate:
+        # local 是目标市场的货币，settlement 是结算基础货币（通常是本币 CNY）
+        # 按照 1 USD = 7 CNY = 7.8 HKD 的比例计算
+        # USD -> CNY: 7.0
+        # HKD -> CNY: 7.0 / 7.8 = 0.8974358974358975
+        # CNY -> CNY: 1.0
+
+        rate = 1.0
+        if local == MARKET.US:
+            rate = 7.0
+        elif local == MARKET.HK:
+            rate = 7.0 / 7.8
+
+        return ExchangeRate(
+            bid_reference=rate,
+            ask_reference=rate,
+            bid_settlement_sh=rate,
+            ask_settlement_sh=rate,
+            bid_settlement_sz=rate,
+            ask_settlement_sz=rate,
+        )
 
     def get_yield_curve(
         self,

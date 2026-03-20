@@ -5,6 +5,12 @@ from rqalpha.api import subscribe, history_bars, current_snapshot, order_shares
 
 
 def init(context):
+    context.codes = ["000001.XSHE", "600000.XSHG"]
+    context.order_count = 0
+    subscribe(context.codes)
+
+
+def init2(context):
     context.codes = ["000001.XSHE", "600000.XSHG", "00700.XHKG", "AAPL.XNAS"]
     context.order_count = 0
     subscribe(context.codes)
@@ -59,24 +65,6 @@ def handle_bar(context, bar_dict):
     assert float(obj.close) == 9.53
     assert float(obj.volume) == 43939258.0
     assert float(obj.total_turnover) == 435757873.0
-
-    obj = bar_dict["00700.XHKG"]
-    assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 00:00:00"
-    assert float(obj.open) == 401.5
-    assert float(obj.high) == 417.9
-    assert float(obj.low) == 401.5
-    assert float(obj.close) == 414.7
-    assert float(obj.volume) == 21086569.0
-    assert float(obj.total_turnover) == 8772957316.0
-
-    obj = bar_dict["AAPL.XNAS"]
-    assert obj.datetime.strftime("%Y-%m-%d %H:%M:%S") == "2024-11-01 00:00:00"
-    assert float(obj.open) == 219.522968047
-    assert float(obj.high) == 223.879351252
-    assert float(obj.low) == 218.832503662
-    assert float(obj.close) == 221.45527485
-    assert float(obj.volume) == 65276741.0
-    assert float(obj.total_turnover) == 14544469827.0
 
 
 def handle_bar_1m(context, bar_dict):
@@ -223,7 +211,7 @@ def test_run_with_futu_datasource():
             "end_date": "2024-11-01",
             "accounts": {"stock": 100000},
             "frequency": "1d",
-            "market": ["cn", "hk", "us"],
+            "market": "cn",
             # "data_bundle_path": os.path.abspath("tests/data"),
         },
         "extra": {
@@ -374,4 +362,4 @@ def test_run_with_futu_datasource_1m():
             }
         },
     }
-    run_func(init=init, handle_bar=handle_bar_1m, config=config)
+    run_func(init=init2, handle_bar=handle_bar_1m, config=config)

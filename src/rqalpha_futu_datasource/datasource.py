@@ -106,6 +106,7 @@ class FutuDataSource(AbstractDataSource):
             "board_type": board_type,
             "listed_date": "1990-01-01",
             "de_listed_date": "2999-12-31",
+            "market_tplus": 0,
         }
 
         m_enum = MARKET.CN
@@ -113,6 +114,8 @@ class FutuDataSource(AbstractDataSource):
             m_enum = MARKET.HK
         elif exch in (EXCHANGE.XNAS, EXCHANGE.XNYS):
             m_enum = MARKET.US
+        else:
+            dic["market_tplus"] = 1
 
         return Instrument(dic, market=m_enum)
 

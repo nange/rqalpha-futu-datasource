@@ -97,12 +97,24 @@ class FutuDataSource(AbstractDataSource):
         elif exch in (EXCHANGE.XNAS, EXCHANGE.XNYS):
             round_lot = 1
 
+        instr_type = INSTRUMENT_TYPE.CS.name
+        if exch in (EXCHANGE.XSHE, EXCHANGE.XSHG):
+            if code.startswith(("51", "15", "56", "58")):
+                instr_type = INSTRUMENT_TYPE.ETF.name
+            elif code.startswith(("50", "16")):
+                instr_type = INSTRUMENT_TYPE.LOF.name
+        elif exch == EXCHANGE.XHKG:
+            if code.startswith(
+                ("028", "030", "031", "034", "082", "083", "090", "091", "098")
+            ):
+                instr_type = INSTRUMENT_TYPE.ETF.name
+
         dic = {
             "order_book_id": f"{code}.{exch}",
             "symbol": code,
             "round_lot": round_lot,
             "exchange": exch,
-            "type": INSTRUMENT_TYPE.CS.name,
+            "type": instr_type,
             "board_type": board_type,
             "listed_date": "1990-01-01",
             "de_listed_date": "2999-12-31",

@@ -20,9 +20,9 @@ class DummyInstrument:
     "market_param, expected_obids",
     [
         # Case 1: 单个字符串 "cn"
-        ("cn", ["000001.XSHE", "600000.XSHG"]),
+        ("cn", ["000001.XSHE", "600000.XSHG", "588000.XSHG"]),
         # Case 2: 包含单个元素的列表 ["cn"]
-        (["cn"], ["000001.XSHE", "600000.XSHG"]),
+        (["cn"], ["000001.XSHE", "600000.XSHG", "588000.XSHG"]),
         # Case 3: 单个字符串 "hk"
         ("hk", ["00700.XHKG"]),
         # Case 4: 包含多个元素的列表 ["us", "hk"]
@@ -33,6 +33,7 @@ class DummyInstrument:
             [
                 "000001.XSHE",
                 "600000.XSHG",
+                "588000.XSHG",
                 "00700.XHKG",
                 "AAPL.XNAS",
                 "ORCL.XNYS",
@@ -564,3 +565,39 @@ def test_get_instruments_us_market_default_exchange():
     found_obids = {i.order_book_id for i in instruments}
     # My logic defaults US market symbols to XNAS
     assert "AAPL.XNAS" in found_obids
+
+
+def test_instrument_type_classification():
+    # We test explicit codes we know exist in the data directory
+    # (Some were created specifically for this test via touch command earlier)
+    codes_to_test = [
+        "000001.XSHE",  # CS
+        "600000.XSHG",  # CS
+        "588000.XSHG",  # ETF
+        "510300.XSHG",  # ETF
+        "501000.XSHG",  # LOF
+        "02800.XHKG",  # HK ETF
+        "00700.XHKG",  # HK CS
+        "AAPL.XNAS",  # US CS
+    ]
+
+    # We must patch os.path.exists because our dummy folders/files might not
+    # all have both 1d.csv and 1m.csv which get_instruments checks.
+    with patch("os.path.exists") as mock_exists:
+        mock_exists.return_value = True
+
+        # Load all markets from tests/data to verify the type logic
+        ds = FutuDataSource(data_dir="tests/data", market=["cn", "hk", "us"])
+
+        instruments = ds.get_instruments(codes_to_test)
+
+        type_map = {ins.order_book_id: ins.type for ins in instruments}
+
+        assert type_map.get("000001.XSHE") == "CS"
+        assert type_map.get("600000.XSHG") == "CS"
+        assert type_map.get("588000.XSHG") == "ETF"
+        assert type_map.get("510300.XSHG") == "ETF"
+        assert type_map.get("501000.XSHG") == "LOF"
+        assert type_map.get("02800.XHKG") == "ETF"
+        assert type_map.get("00700.XHKG") == "CS"
+        assert type_map.get("AAPL.XNAS") == "CS"

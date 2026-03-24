@@ -4,7 +4,7 @@ from rqalpha.api import subscribe, order_shares, get_position
 
 
 def init(context):
-    context.codes = ["000001.XSHE", "00700.XHKG", "AAPL.XNAS"]
+    context.codes = ["000001.XSHE", "00700.XHKG", "AAPL.XNAS", "588000.XSHG"]
     subscribe(context.codes)
     context.order_count = 0
     context.checked_portfolio = False
@@ -22,6 +22,8 @@ def handle_bar(context, bar_dict):
         print(f"[{time_str}] Step 1: Placing buy orders for CN, HK, and US markets...")
         # 买入A股 200股 000001.XSHE
         order_shares("000001.XSHE", 200)
+        # 买入A股 ETF 200份 588000.XSHG
+        order_shares("588000.XSHG", 200)
         # 买入港股 200股 00700.XHKG (lot size is 200)
         order_shares("00700.XHKG", 200)
         # 买入美股 10股 AAPL.XNAS
@@ -37,6 +39,10 @@ def handle_bar(context, bar_dict):
         assert pos_a.quantity == 200
         print(f"[{time_str}] A-share quantity: {pos_a.quantity}")
 
+        pos_etf = get_position("588000.XSHG")
+        assert pos_etf.quantity == 200
+        print(f"[{time_str}] A-share ETF quantity: {pos_etf.quantity}")
+
         pos_hk = get_position("00700.XHKG")
         assert pos_hk.quantity == 200
         print(f"[{time_str}] HK-share quantity: {pos_hk.quantity}")
@@ -51,6 +57,13 @@ def handle_bar(context, bar_dict):
         # A股是T+1，当天买入不能卖出，因此订单应该被拒绝并返回 None
         assert order_a is None
         print(f"[{time_str}] A-share sell order: {order_a} (Expected None due to T+1)")
+
+        order_etf = order_shares("588000.XSHG", -100)
+        # ETF目前依然被视为普通的T+1市场处理规则，当天买入不能卖出
+        assert order_etf is None
+        print(
+            f"[{time_str}] A-share ETF sell order: {order_etf} (Expected None due to T+1)"
+        )
 
         order_hk = order_shares("00700.XHKG", -200)
         assert order_hk is not None
@@ -69,6 +82,10 @@ def handle_bar(context, bar_dict):
         pos_a = get_position("000001.XSHE")
         # 由于 T+1，A股卖单失败，持仓应仍为 200
         assert pos_a.quantity == 200
+
+        pos_etf = get_position("588000.XSHG")
+        # 由于 T+1，A股ETF卖单失败，持仓应仍为 200
+        assert pos_etf.quantity == 200
 
         pos_hk = get_position("00700.XHKG")
         assert pos_hk.quantity == 0

@@ -3,7 +3,7 @@
 由于RQAlpha回测框架提供的数据，需要付费(还挺贵)，并且只有A股的数据。
 因此为RQAlpha框架提供自定义的Futu(富途)数据源，同时支持A股、港股、美股数据。用于基于rqalpha框架的股票和场内基金(ETF/LOF)回测。
 
-**注意：本项目依赖的rqalpha框架是fork自官方的版本[nange/rqalpha](https://github.com/nange/rqalpha)，以同时支持A股、港股、美股回测交易。**
+**注意：本项目依赖的rqalpha框架是fork自官方的版本[rqalpha-plus](https://github.com/nange/rqalpha-plus)，以同时支持A股、港股、美股回测交易。在编写回测代码时，原本依赖的rqalpha框架，需要替换为rqalpha-plus。**
 
 ## 用法
 

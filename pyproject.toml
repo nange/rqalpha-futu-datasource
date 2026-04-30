@@ -1,6 +1,6 @@
 [project]
 name = "rqalpha-futu-datasource"
-version = "3.0.1"
+version = "3.0.2"
 description = "Futu datasource for rqalpha"
 readme = "README.md"
 requires-python = ">=3.11, <4.0"
@@ -19,10 +19,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 
-dependencies = [
-    "futu-api>=10.0.6008",
-    "rqalpha-plus>=6.1.3.5",
-]
+dependencies = ["futu-api>=10.4.6408", "rqalpha-plus>=6.1.3.5"]
 
 [build-system]
 requires = ["hatchling"]
@@ -35,4 +32,4 @@ packages = ["src/rqalpha_futu_datasource"]
 allow-direct-references = true
 
 [dependency-groups]
-dev = ["ruff>=0.15.6", "pytest>=9.0.0"]
+dev = ["ruff>=0.15.6", "pytest>=9.0.0", "isort>=8.0.1"]
